@@ -33,6 +33,14 @@ newtype HouseIAmOptionSelector = HouseIAmOptionSelector { unHouseIAmOptionSelect
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseSupportSelector = HouseSupportSelector { unHouseSupportSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype HouseOpposeSelector = HouseOpposeSelector { unHouseOpposeSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -45,6 +53,8 @@ data Config
     , houseBillDropdownSelector :: HouseBillDropdownSelector
     , houseIAmDropdownSelector :: HouseIAmDropdownSelector
     , houseIAmOptionSelector :: HouseIAmOptionSelector
+    , houseSupportSelector :: HouseSupportSelector
+    , houseOpposeSelector :: HouseOpposeSelector
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -59,5 +69,7 @@ config =
   , houseBillDropdownSelector = "select[name=\"ddlBills\"]"
   , houseIAmDropdownSelector = "select[name=\"ddlWho\"]"
   , houseIAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
+  , houseSupportSelector = "#rdoPosition_0"
+  , houseOpposeSelector = "#rdoPosition_1"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }

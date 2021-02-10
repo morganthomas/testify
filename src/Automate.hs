@@ -19,8 +19,8 @@ import Config
 import Types
 
 
-testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> PersonalInfo -> m ()
-testifyOnHouseBill cfg day committee bill person = do
+testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()
+testifyOnHouseBill cfg day committee bill position person = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- findElem (daySelector day)
   click dayEl
@@ -36,6 +36,10 @@ testifyOnHouseBill cfg day committee bill person = do
   click iamSelect
   iamEl <- findElem . ByCSS . unHouseIAmOptionSelector $ houseIAmOptionSelector cfg
   click iamEl
+  posEl <- case position of
+             Support -> findElem . ByCSS . unHouseSupportSelector $ houseSupportSelector cfg
+             Oppose -> findElem . ByCSS . unHouseOpposeSelector $ houseOpposeSelector cfg
+  click posEl
   error "todo"
 
 
