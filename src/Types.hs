@@ -11,7 +11,24 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 
 
-newtype Bill = Bill { unBill :: Text }
+newtype BillName = BillName Text
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance ToJSON BillName
+instance FromJSON BillName
+
+
+newtype BillId = BillId Text
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance ToJSON BillId
+instance FromJSON BillId
+
+
+data Bill
+  = Bill
+    { billName :: BillName
+    , billId   :: BillId }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Bill

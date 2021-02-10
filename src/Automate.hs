@@ -19,6 +19,10 @@ import Config
 import Types
 
 
+testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> PersonalInfo -> m ()
+testifyOnHouseBill = error "todo"
+
+
 getHouseBills :: WebDriver m => Config -> Day -> m Agenda
 getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
@@ -44,7 +48,9 @@ getHouseCommitteeBills cfg committee = do
   click option
   billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
                               <> " option:not(selected)"
-  fmap Bill <$> forM billEls getText
+  billNames <- fmap BillName <$> forM billEls getText
+  billIds <- fmap (BillId . fromMaybe "0") <$> forM billEls (\e -> attr e "value")
+  return (zipWith Bill billNames billIds)
 
 
 committeeSelector :: Config -> Committee -> Selector
