@@ -11,7 +11,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 
 
-newtype Bill = Bill Text
+newtype Bill = Bill { unBill :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Bill
@@ -20,7 +20,7 @@ instance ToJSONKey Bill
 instance FromJSONKey Bill
 
 
-newtype Committee = Committee Text
+newtype Committee = Committee { unCommittee :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Committee
@@ -29,7 +29,7 @@ instance ToJSONKey Committee
 instance FromJSONKey Committee
 
 
-newtype Agenda = Agenda (Map Committee (Set Bill))
+newtype Agenda = Agenda { unAgenda :: Map Committee (Set Bill) }
   deriving (Eq, Show, Read, Generic)
 
 instance ToJSON Agenda
@@ -43,28 +43,28 @@ instance ToJSON Position
 instance FromJSON Position
 
 
-newtype Positions = Positions (Map Committee (Map Bill Position))
+newtype Positions = Positions { unPositions :: Map Committee (Map Bill Position) }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Positions
 instance FromJSON Positions
 
 
-newtype FirstName = FirstName Text
+newtype FirstName = FirstName { unFirstName :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON FirstName
 instance FromJSON FirstName
 
 
-newtype LastName = LastName Text
+newtype LastName = LastName { unLastName :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON LastName
 instance FromJSON LastName
 
 
-newtype Email = Email Text
+newtype Email = Email { unEmail :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Email

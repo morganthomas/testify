@@ -9,11 +9,11 @@ import Data.String (IsString)
 import Data.Text (Text)
 
 
-newtype HouseFormUrl = HouseFormUrl Text
+newtype HouseFormUrl = HouseFormUrl { unHouseFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype SenateFormUrl = SenateFormUrl Text
+newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
