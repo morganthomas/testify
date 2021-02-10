@@ -4,6 +4,8 @@
 module Automate where
 
 
+import Control.Monad (forM)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
 import Test.WebDriver.Class
@@ -18,6 +20,14 @@ getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- findElem (daySelector day)
   click dayEl
+  return (error "todo")
+
+
+getCommittees :: WebDriver m => Config -> m [Committee]
+getCommittees cfg = do
+  els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
+  committeeNames <- fmap CommitteeName <$> forM els getText
+  committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
   return (error "todo")
 
 

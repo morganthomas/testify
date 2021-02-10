@@ -20,7 +20,25 @@ instance ToJSONKey Bill
 instance FromJSONKey Bill
 
 
-newtype Committee = Committee { unCommittee :: Text }
+newtype CommitteeName = CommitteeName Text
+  deriving (Eq, Ord, Read, Show, Generic)
+
+instance ToJSON CommitteeName
+instance FromJSON CommitteeName
+
+
+newtype CommitteeId = CommitteeId Text
+  deriving (Eq, Ord, Read, Show, Generic)
+
+instance ToJSON CommitteeId
+instance FromJSON CommitteeId
+
+
+data Committee =
+  Committee
+  { committeeName :: CommitteeName
+  , committeeId   :: CommitteeId
+  }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON Committee
