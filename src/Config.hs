@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 
 module Config where
@@ -22,3 +23,11 @@ data Config
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
+
+
+config :: Config
+config =
+  Config
+  { houseFormUrl = "http://gencourt.state.nh.us/house/committees/remotetestimony/default.aspx"
+  , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
+  }
