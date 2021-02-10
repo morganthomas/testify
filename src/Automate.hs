@@ -42,7 +42,9 @@ getHouseCommitteeBills cfg committee = do
   click select
   option <- findElem $ committeeSelector cfg committee
   click option
-  return (error "todo")
+  billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
+                              <> " option:not(selected)"
+  fmap Bill <$> forM billEls getText
 
 
 committeeSelector :: Config -> Committee -> Selector

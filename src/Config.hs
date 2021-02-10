@@ -21,6 +21,10 @@ newtype HouseCommitteeDropdownSelector = HouseCommitteeDropdownSelector { unHous
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseBillDropdownSelector = HouseBillDropdownSelector { unHouseBillDropdownSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -30,6 +34,7 @@ data Config
     { houseFormUrl :: HouseFormUrl
     , houseCommitteeSelector :: HouseCommitteeSelector
     , houseCommitteeDropdownSelector :: HouseCommitteeDropdownSelector
+    , houseBillDropdownSelector :: HouseBillDropdownSelector
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -41,5 +46,6 @@ config =
   { houseFormUrl = "http://gencourt.state.nh.us/house/committees/remotetestimony/default.aspx"
   , houseCommitteeSelector = "select[name=\"ddlCommittee\"] option"
   , houseCommitteeDropdownSelector = "select[name=\"ddlCommittee\"]"
+  , houseBillDropdownSelector = "select[name=\"ddlBills\"]"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }
