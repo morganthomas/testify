@@ -13,17 +13,19 @@ import Config
 import Types
 
 
-getHouseBills :: WebDriver m => Config -> m Agenda
-getHouseBills cfg = do
+getHouseBills :: WebDriver m => Config -> Day -> m Agenda
+getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
+  dayEl <- findElem (daySelector day)
+  click dayEl
   return (error "todo")
 
 
-daySelector :: Day -> Text
+daySelector :: Day -> Selector
 daySelector day =
   let (_, month, dayOfMonth) = toGregorian day
       monthText = monthToText month
-  in "a[title=\"" <> monthText <> " " <> pack (show dayOfMonth) <> "\"]"
+  in ByCSS $ "a[title=\"" <> monthText <> " " <> pack (show dayOfMonth) <> "\"]"
 
 
 monthToText :: Int -> Text
