@@ -20,6 +20,7 @@ getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- findElem (daySelector day)
   click dayEl
+  committees <- getCommittees cfg
   return (error "todo")
 
 
@@ -28,7 +29,7 @@ getCommittees cfg = do
   els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
-  return (error "todo")
+  return (zipWith Committee committeeNames committeeIds)
 
 
 daySelector :: Day -> Selector
