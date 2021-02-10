@@ -20,7 +20,19 @@ import Types
 
 
 testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> PersonalInfo -> m ()
-testifyOnHouseBill = error "todo"
+testifyOnHouseBill cfg day committee bill person = do
+  openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
+  dayEl <- findElem (daySelector day)
+  click dayEl
+  committeeSelect <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
+  click committeeSelect
+  committeeEl <- findElem (committeeSelector cfg committee)
+  click committeeEl
+  billSelect <- findElem . ByCSS . unHouseBillDropdownSelector $ houseBillDropdownSelector cfg
+  click billSelect
+  billEl <- findElem (billSelector cfg bill)
+  click billEl
+  error "todo"
 
 
 getHouseBills :: WebDriver m => Config -> Day -> m Agenda
@@ -56,6 +68,11 @@ getHouseCommitteeBills cfg committee = do
 committeeSelector :: Config -> Committee -> Selector
 committeeSelector cfg committee = ByCSS $ unHouseCommitteeDropdownSelector (houseCommitteeDropdownSelector cfg)
                                        <> " option[value=\"" <> pack (show (unCommitteeId (committeeId committee))) <> "\"]"
+
+
+billSelector :: Config -> Bill -> Selector
+billSelector cfg bill = ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
+                             <> " option[value=\"" <> pack (show (unBillId (billId bill))) <> "\"]"
 
 
 daySelector :: Day -> Selector
