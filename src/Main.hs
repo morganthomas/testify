@@ -9,6 +9,7 @@ import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.Html
 import           Shpadoinkle.Run             (live, runJSorWarp, simple)
 
+import Config
 import Types
 
 
