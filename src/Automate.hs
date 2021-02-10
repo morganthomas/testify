@@ -40,6 +40,8 @@ testifyOnHouseBill cfg day committee bill position person = do
              Support -> findElem . ByCSS . unHouseSupportSelector $ houseSupportSelector cfg
              Oppose -> findElem . ByCSS . unHouseOpposeSelector $ houseOpposeSelector cfg
   click posEl
+  continueEl <- findElem . ByCSS . unHouseContinueSelector $ houseContinueSelector cfg
+  click continueEl
   error "todo"
 
 

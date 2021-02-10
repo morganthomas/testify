@@ -41,6 +41,10 @@ newtype HouseOpposeSelector = HouseOpposeSelector { unHouseOpposeSelector :: Tex
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseContinueSelector = HouseContinueSelector { unHouseContinueSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -55,6 +59,7 @@ data Config
     , houseIAmOptionSelector :: HouseIAmOptionSelector
     , houseSupportSelector :: HouseSupportSelector
     , houseOpposeSelector :: HouseOpposeSelector
+    , houseContinueSelector :: HouseContinueSelector
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -71,5 +76,6 @@ config =
   , houseIAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
   , houseSupportSelector = "#rdoPosition_0"
   , houseOpposeSelector = "#rdoPosition_1"
+  , houseContinueSelector = "#btnContinue"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }
