@@ -20,16 +20,31 @@ getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- findElem (daySelector day)
   click dayEl
-  committees <- getCommittees cfg
+  committees <- getHouseCommittees cfg
+  bills <- forM committees (getHouseCommitteeBills cfg)
   return (error "todo")
 
 
-getCommittees :: WebDriver m => Config -> m [Committee]
-getCommittees cfg = do
+getHouseCommittees :: WebDriver m => Config -> m [Committee]
+getHouseCommittees cfg = do
   els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
   return (zipWith Committee committeeNames committeeIds)
+
+
+getHouseCommitteeBills :: WebDriver m => Config -> Committee -> m [Bill]
+getHouseCommitteeBills cfg committee = do
+  select <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
+  click select
+  option <- findElem $ committeeSelector cfg committee
+  click option
+  return []
+
+
+committeeSelector :: Config -> Committee -> Selector
+committeeSelector cfg committee = ByCSS $ unHouseCommitteeDropdownSelector (houseCommitteeDropdownSelector cfg)
+                                       <> " option[value=\"" <> pack (show (unCommitteeId (committeeId committee))) <> "\"]"
 
 
 daySelector :: Day -> Selector
