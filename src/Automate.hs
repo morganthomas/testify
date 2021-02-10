@@ -27,4 +27,16 @@ daySelector day =
 
 
 monthToText :: Int -> Text
-monthToText = error "todo"
+monthToText 1 = "January"
+monthToText 2 = "February"
+monthToText 3 = "March"
+monthToText 4 = "April"
+monthToText 5 = "May"
+monthToText 6 = "June"
+monthToText 7 = "July"
+monthToText 8 = "August"
+monthToText 9 = "September"
+monthToText 10 = "October"
+monthToText 11 = "November"
+monthToText 12 = "December"
+monthToText _ = "Septembruary"
