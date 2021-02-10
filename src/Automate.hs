@@ -42,7 +42,7 @@ getHouseCommitteeBills cfg committee = do
   click select
   option <- findElem $ committeeSelector cfg committee
   click option
-  return []
+  return (error "todo")
 
 
 committeeSelector :: Config -> Committee -> Selector
