@@ -32,6 +32,10 @@ testifyOnHouseBill cfg day committee bill person = do
   click billSelect
   billEl <- findElem (billSelector cfg bill)
   click billEl
+  iamSelect <- findElem . ByCSS . unHouseIAmDropdownSelector $ houseIAmDropdownSelector cfg
+  click iamSelect
+  iamEl <- findElem . ByCSS . unHouseIAmOptionSelector $ houseIAmOptionSelector cfg
+  click iamEl
   error "todo"
 
 
