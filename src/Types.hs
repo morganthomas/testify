@@ -50,4 +50,42 @@ instance ToJSON Positions
 instance FromJSON Positions
 
 
+newtype FirstName = FirstName Text
+  deriving (Eq, Ord, Show, Read, Generic)
 
+instance ToJSON FirstName
+instance FromJSON FirstName
+
+
+newtype LastName = LastName Text
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance ToJSON LastName
+instance FromJSON LastName
+
+
+newtype Email = Email Text
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance ToJSON Email
+instance FromJSON Email
+
+
+data PersonalInfo
+  = PersonalInfo
+    { firstName :: FirstName
+    , lastName  :: LastName
+    , email     :: Email
+    }
+  deriving (Eq, Show, Read, Generic)
+
+instance ToJSON PersonalInfo
+instance FromJSON PersonalInfo
+
+
+data Submission
+  = Submission
+    { positions :: Positions
+    , persons   :: [PersonalInfo]
+    }
+  deriving (Eq, Show, Read, Generic)
