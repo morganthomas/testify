@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 
 module Automate where
@@ -11,6 +12,9 @@ import Data.Time.Calendar (Day, toGregorian)
 import Test.WebDriver.Class
 import Test.WebDriver.Commands
 
+import qualified Data.Map as Map
+import qualified Data.Set as Set
+
 import Config
 import Types
 
@@ -21,8 +25,7 @@ getHouseBills cfg day = do
   dayEl <- findElem (daySelector day)
   click dayEl
   committees <- getHouseCommittees cfg
-  bills <- forM committees (getHouseCommitteeBills cfg)
-  return (error "todo")
+  Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getHouseCommitteeBills cfg c)
 
 
 getHouseCommittees :: WebDriver m => Config -> m [Committee]
