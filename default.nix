@@ -81,6 +81,9 @@ let
   };
 
 
+  chromedriver = with pkgs; with xlibs; import ./chromedriver.nix { gconf = gnome2.GConf; inherit stdenv fetchurl cairo fontconfig freetype gdk-pixbuf glib glibc gtk2 libX11 makeWrapper nspr nss pango unzip libxcb libXi libXrender libXext; };
+
+
   ghcTools = with pkgs.haskell.packages.${compiler};
     [ cabal-install
       ghcid
@@ -98,9 +101,10 @@ in with pkgs; with lib;
     inherit withHoogle;
     packages    = _: [ testify ];
     COMPILER    = compilerjs;
-    buildInputs = ghcTools;
+    buildInputs = ghcTools ++ [ chromedriver ];
     shellHook   = ''
       ${lolcat}/bin/lolcat ${./figlet}
       cat ${./intro}
+      chromedriver --port=4444 --log-path=chromedriver.log &
     '';
   } else (if isJS && optimize then doCannibalize else x: x) (chill testify)
