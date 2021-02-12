@@ -16,6 +16,7 @@ executable testify
    , text
    , time
    , transformers
+   , transformers-base
    , warp
    , webdriver
   hs-source-dirs:      src

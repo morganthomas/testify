@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -11,6 +12,7 @@ import Config
 import Types
 import Types.Api
 
+import Control.Monad.Base (MonadBase)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
@@ -19,11 +21,12 @@ import Data.Time.Calendar
 import GHC.Generics
 import Servant
 import Test.WebDriver (runWD)
+import Test.WebDriver.Config (defaultConfig, mkSession)
 import Test.WebDriver.Session (WDSession)
 
 
-createWebDriver :: MonadIO m => m WDSession
-createWebDriver = error "todo"
+createWebDriver :: MonadBase IO m => m WDSession
+createWebDriver = mkSession defaultConfig
 
 
 app :: Config -> IO Application
