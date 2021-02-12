@@ -8,6 +8,7 @@ executable testify
    , aeson
    , containers
    , servant
+   , servant-server
    , Shpadoinkle
    , Shpadoinkle-backend-pardiff
    , Shpadoinkle-html

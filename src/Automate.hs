@@ -2,7 +2,10 @@
 {-# LANGUAGE TupleSections     #-}
 
 
-module Automate where
+module Automate 
+  ( getHouseBills
+  , testifyOnHouseBill
+  ) where
 
 
 import Control.Monad (forM)
