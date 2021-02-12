@@ -42,7 +42,18 @@ testifyOnHouseBill cfg day committee bill position person = do
   click posEl
   continueEl <- findElem . ByCSS . unHouseContinueSelector $ houseContinueSelector cfg
   click continueEl
-  error "todo"
+  firstNameEl <- findElem . ByCSS . unHouseFirstNameSelector $ houseFirstNameSelector cfg
+  sendKeys (unFirstName (firstName person)) firstNameEl
+  lastNameEl <- findElem . ByCSS . unHouseLastNameSelector $ houseLastNameSelector cfg
+  sendKeys (unLastName (lastName person)) lastNameEl
+  emailEl <- findElem . ByCSS . unHouseEmailSelector $ houseEmailSelector cfg
+  sendKeys (unEmail (email person)) emailEl
+  continueEl2 <- findElem . ByCSS . unHouseContinueSelector2 $ houseContinueSelector2 cfg
+  click continueEl2
+  agreeEl <- findElem . ByCSS . unHouseAgreeSelector $ houseAgreeSelector cfg
+  click agreeEl
+  continueEl3 <- findElem . ByCSS . unHouseContinueSelector3 $ houseContinueSelector3 cfg
+  click continueEl3
 
 
 getHouseBills :: WebDriver m => Config -> Day -> m Agenda
