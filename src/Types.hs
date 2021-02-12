@@ -124,3 +124,31 @@ data Submission
     , persons   :: [PersonalInfo]
     }
   deriving (Eq, Show, Read, Generic)
+
+
+newtype ErrorMessage = ErrorMessage Text
+  deriving (Eq, Show, Read, Generic)
+
+instance ToJSON ErrorMessage
+instance FromJSON ErrorMessage
+
+
+newtype AgendaResult = AgendaResult { unAgendaResult :: Either ErrorMessage Agenda }
+  deriving (Eq, Show, Read, Generic)
+
+instance ToJSON AgendaResult
+instance FromJSON AgendaResult
+
+
+data Success = Success
+  deriving (Eq, Show, Read, Generic)
+
+instance ToJSON Success
+instance FromJSON Success
+
+
+newtype TestifyResult = TestifyResult { unTestifyResult :: Either ErrorMessage Success }
+  deriving (Eq, Show, Read, Generic)
+
+instance ToJSON TestifyResult
+instance FromJSON TestifyResult

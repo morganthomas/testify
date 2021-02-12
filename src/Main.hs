@@ -12,6 +12,7 @@ import           Shpadoinkle.Run             (live, runJSorWarp, simple)
 import Automate
 import Config
 import Types
+import Types.Api
 
 
 view :: () -> Html m ()
