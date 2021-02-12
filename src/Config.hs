@@ -45,6 +45,22 @@ newtype HouseContinueSelector = HouseContinueSelector { unHouseContinueSelector 
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseFirstNameSelector = HouseFirstNameSelector { unHouseFirstNameSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype HouseLastNameSelector = HouseLastNameSelector { unHouseLastNameSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype HouseEmailSelector = HouseEmailSelector { unHouseEmailSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype HouseContinueSelector2 = HouseContinueSelector2 { unHouseContinueSelector2 :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -60,6 +76,10 @@ data Config
     , houseSupportSelector :: HouseSupportSelector
     , houseOpposeSelector :: HouseOpposeSelector
     , houseContinueSelector :: HouseContinueSelector
+    , houseFirstNameSelector :: HouseFirstNameSelector
+    , houseLastNameSelector :: HouseLastNameSelector
+    , houseEmailSelector :: HouseEmailSelector
+    , houseContinueSelector2 :: HouseContinueSelector2
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -77,5 +97,9 @@ config =
   , houseSupportSelector = "#rdoPosition_0"
   , houseOpposeSelector = "#rdoPosition_1"
   , houseContinueSelector = "#btnContinue"
+  , houseFirstNameSelector = "#txtFirstName"
+  , houseLastNameSelector = "#txtLastName"
+  , houseEmailSelector = "#txtEmail"
+  , houseContinueSelector2 = "#btnContinue"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }
