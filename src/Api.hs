@@ -26,9 +26,8 @@ createWebDriver :: MonadIO m => m WDSession
 createWebDriver = error "todo"
 
 
-app :: MonadIO m => HasConfig m => HasWebDriver m
-    => m Application
-app = error "todo"
+app :: Config -> IO Application
+app = fmap (serve api) . server
 
 
 api :: Proxy Api
