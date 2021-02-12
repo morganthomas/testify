@@ -10,7 +10,9 @@ module Automate
   ) where
 
 
-import Control.Monad (forM)
+import Control.Monad (forM, forM_)
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
@@ -30,7 +32,24 @@ class HasWebDriver m where
 
 
 testifyOnHouseBills :: WebDriver m => Config -> Submission -> m ()
-testifyOnHouseBills = error "todo"
+testifyOnHouseBills cfg subm =
+  let posMap :: Map Committee (Map Bill Position)
+      posMap = unPositions $ positions subm
+
+      people :: [PersonalInfo]
+      people = persons subm
+
+      day :: Day
+      day = submissionDate subm
+
+      forms :: [(Committee, Bill, Position, PersonalInfo)]
+      forms = do
+        (c, bills) <- Map.toList posMap
+        (bill, pos) <- Map.toList bills
+        person <- people
+        return (c, bill, pos, person)
+
+  in forM_ forms (\(c,bill,pos,person) -> testifyOnHouseBill cfg day c bill pos person)
 
 
 testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()
