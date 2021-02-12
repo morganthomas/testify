@@ -54,20 +54,16 @@ instance MonadIO m => HasWebDriver (AutomateT m) where
 server :: Config -> IO (Server Api)
 server cfg = do
   session <- createWebDriver
-  return $ hoistServer api (f session) server''
+  return $ hoistServer api (f session) server'
 
   where
     f :: WDSession -> forall x. AutomateT IO x -> Handler x
     f session m = Handler $ runReaderT (unAutomateT m) (cfg, session)
 
 
-server' :: Config -> IO (ServerT Api (AutomateT IO))
-server' cfg = error "todo"
-
-
-server'' :: HasConfig m => HasWebDriver m => MonadIO m
+server' :: HasConfig m => HasWebDriver m => MonadIO m
        => ServerT Api m
-server'' = getAgendaHandler :<|> testifyHandler
+server' = getAgendaHandler :<|> testifyHandler
 
 
 getAgendaHandler :: HasConfig m => HasWebDriver m => MonadIO m
