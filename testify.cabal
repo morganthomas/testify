@@ -7,6 +7,7 @@ executable testify
   build-depends:       base ^>=4.12.0.0
    , aeson
    , containers
+   , mtl
    , servant
    , servant-server
    , Shpadoinkle
@@ -14,6 +15,7 @@ executable testify
    , Shpadoinkle-html
    , text
    , time
+   , transformers
    , webdriver
   hs-source-dirs:      src
   default-language:    Haskell2010
