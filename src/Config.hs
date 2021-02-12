@@ -95,6 +95,10 @@ data Config
   deriving (Eq, Read, Show)
 
 
+class HasConfig m where
+  getConfig :: m Config
+
+
 config :: Config
 config =
   Config

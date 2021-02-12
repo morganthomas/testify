@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TupleSections     #-}
 
 
 module Automate 
-  ( getHouseBills
-  , testifyOnHouseBill
+  ( HasWebDriver (runWebDriver)
+  , getHouseBills
+  , testifyOnHouseBills
   ) where
 
 
@@ -12,6 +14,7 @@ import Control.Monad (forM)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
+import Test.WebDriver (WD)
 import Test.WebDriver.Class
 import Test.WebDriver.Commands
 
@@ -20,6 +23,14 @@ import qualified Data.Set as Set
 
 import Config
 import Types
+
+
+class HasWebDriver m where
+  runWebDriver :: WD a -> m a
+
+
+testifyOnHouseBills :: WebDriver m => Config -> Submission -> m ()
+testifyOnHouseBills = error "todo"
 
 
 testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()

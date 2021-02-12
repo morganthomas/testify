@@ -8,6 +8,7 @@ import Data.Aeson (ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 import Data.Map (Map)
 import Data.Set (Set)
 import Data.Text (Text)
+import Data.Time.Calendar (Day)
 import GHC.Generics (Generic)
 
 
@@ -120,8 +121,9 @@ instance FromJSON PersonalInfo
 
 data Submission
   = Submission
-    { positions :: Positions
-    , persons   :: [PersonalInfo]
+    { positions      :: Positions
+    , persons        :: [PersonalInfo]
+    , submissionDate :: Day
     }
   deriving (Eq, Show, Read, Generic)
 

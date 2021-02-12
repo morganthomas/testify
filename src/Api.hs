@@ -1,20 +1,31 @@
 module Api ( api ) where
 
 
+import Automate
+import Config
 import Types
 import Types.Api
 
 import Control.Monad.IO.Class
+import Data.Time.Calendar
 import Servant
 
 
-api :: MonadIO m => ServerT Api m
+api :: HasConfig m => HasWebDriver m => MonadIO m
+    => ServerT Api m
 api = getAgendaHandler :<|> testifyHandler
 
 
-getAgendaHandler :: MonadIO m => m AgendaResult
-getAgendaHandler = error "todo"
+getAgendaHandler :: HasConfig m => HasWebDriver m => MonadIO m
+                 => Day -> m AgendaResult
+getAgendaHandler day = do
+  cfg <- getConfig
+  AgendaResult . Right <$> runWebDriver (getHouseBills cfg day)
 
 
-testifyHandler :: MonadIO m => Submission -> m TestifyResult
-testifyHandler = error "todo"
+testifyHandler :: HasConfig m => HasWebDriver m => MonadIO m
+               => Submission -> m TestifyResult
+testifyHandler subm = do
+  cfg <- getConfig
+  TestifyResult (Right Success)
+    <$ runWebDriver (testifyOnHouseBills cfg subm)
