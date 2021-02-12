@@ -127,6 +127,9 @@ data Submission
     }
   deriving (Eq, Show, Read, Generic)
 
+instance ToJSON Submission
+instance FromJSON Submission
+
 
 newtype ErrorMessage = ErrorMessage Text
   deriving (Eq, Show, Read, Generic)
