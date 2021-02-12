@@ -3,7 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
 
-module Api ( api ) where
+module Api ( app ) where
 
 
 import Automate
