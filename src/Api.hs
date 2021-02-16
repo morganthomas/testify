@@ -20,7 +20,8 @@ import Data.Proxy
 import Data.Time.Calendar
 import GHC.Generics
 import Servant
-import Test.WebDriver (runWD)
+import Test.WebDriver (sessions, runWD, useBrowser, chrome, createSession)
+import Test.WebDriver.Capabilities (defaultCaps)
 import Test.WebDriver.Config (defaultConfig, mkSession)
 import Test.WebDriver.Session (WDSession)
 
@@ -50,7 +51,7 @@ instance Monad m => HasConfig (AutomateT m) where
 instance MonadIO m => HasWebDriver (AutomateT m) where
   runWebDriver m = do
     session <- AutomateT $ asks snd
-    liftIO $ runWD session m
+    liftIO $ runWD session (createSession defaultCaps >> (liftIO . putStrLn . show =<< sessions) >> m)
 
 
 server :: Config -> IO (Server Api)
