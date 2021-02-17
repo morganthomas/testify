@@ -20,14 +20,10 @@ import Data.Proxy
 import Data.Time.Calendar
 import GHC.Generics
 import Servant
-import Test.WebDriver (sessions, runWD, useBrowser, chrome, createSession)
-import Test.WebDriver.Capabilities (defaultCaps)
-import Test.WebDriver.Config (defaultConfig, mkSession)
+import Test.WebDriver (Browser (..), sessions, runWD, useBrowser, createSession, runSession)
+import Test.WebDriver.Capabilities (defaultCaps, phantomjs)
+import Test.WebDriver.Config (WDConfig, defaultConfig)
 import Test.WebDriver.Session (WDSession)
-
-
-createWebDriver :: MonadBase IO m => m WDSession
-createWebDriver = mkSession defaultConfig
 
 
 app :: Config -> IO Application
@@ -38,7 +34,7 @@ api :: Proxy Api
 api = Proxy
 
 
-newtype AutomateT m a = AutomateT { unAutomateT :: ReaderT (Config, WDSession) (ExceptT ServerError m) a }
+newtype AutomateT m a = AutomateT { unAutomateT :: ReaderT Config (ExceptT ServerError m) a }
 
 deriving instance Functor m => Functor (AutomateT m)
 deriving instance Monad m => Applicative (AutomateT m)
@@ -46,39 +42,41 @@ deriving instance Monad m => Monad (AutomateT m)
 deriving instance MonadIO m => MonadIO (AutomateT m)
 
 instance Monad m => HasConfig (AutomateT m) where
-  getConfig = AutomateT $ asks fst
+  getConfig = AutomateT $ asks id
 
-instance MonadIO m => HasWebDriver (AutomateT m) where
-  runWebDriver m = do
-    session <- AutomateT $ asks snd
-    liftIO $ runWD session (createSession defaultCaps >> (liftIO . putStrLn . show =<< sessions) >> m)
+
+browser :: Browser
+browser = Phantomjs (Just "/run/current-system/sw/bin/phantomjs") []
+
+
+sessionConfig :: WDConfig
+sessionConfig = useBrowser browser defaultConfig
 
 
 server :: Config -> IO (Server Api)
-server cfg = do
-  session <- createWebDriver
-  return $ hoistServer api (f session) server'
+server cfg =
+  return $ hoistServer api f server'
 
   where
-    f :: WDSession -> forall x. AutomateT IO x -> Handler x
-    f session m = Handler $ runReaderT (unAutomateT m) (cfg, session)
+    f :: forall x. AutomateT IO x -> Handler x
+    f m = Handler $ runReaderT (unAutomateT m) cfg
 
 
-server' :: HasConfig m => HasWebDriver m => MonadIO m
+server' :: HasConfig m => MonadIO m
        => ServerT Api m
 server' = getAgendaHandler :<|> testifyHandler
 
 
-getAgendaHandler :: HasConfig m => HasWebDriver m => MonadIO m
+getAgendaHandler :: HasConfig m => MonadIO m
                  => Day -> m AgendaResult
 getAgendaHandler day = do
   cfg <- getConfig
-  AgendaResult . Right <$> runWebDriver (getHouseBills cfg day)
+  liftIO $ AgendaResult . Right <$> runSession sessionConfig (getHouseBills cfg day)
 
 
-testifyHandler :: HasConfig m => HasWebDriver m => MonadIO m
+testifyHandler :: HasConfig m => MonadIO m
                => Submission -> m TestifyResult
 testifyHandler subm = do
   cfg <- getConfig
-  TestifyResult (Right Success)
-    <$ runWebDriver (testifyOnHouseBills cfg subm)
+  liftIO $ TestifyResult (Right Success)
+    <$ runSession sessionConfig (testifyOnHouseBills cfg subm)

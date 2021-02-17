@@ -4,8 +4,7 @@
 
 
 module Automate 
-  ( HasWebDriver (runWebDriver)
-  , getHouseBills
+  ( getHouseBills
   , testifyOnHouseBills
   ) where
 
@@ -25,10 +24,6 @@ import qualified Data.Set as Set
 
 import Config
 import Types
-
-
-class HasWebDriver m where
-  runWebDriver :: WD a -> m a
 
 
 testifyOnHouseBills :: WebDriver m => Config -> Submission -> m ()

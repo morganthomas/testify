@@ -100,7 +100,7 @@ in with pkgs; with lib;
     inherit withHoogle;
     packages    = _: [ testify ];
     COMPILER    = compilerjs;
-    buildInputs = ghcTools ++ [ jre ];
+    buildInputs = ghcTools ++ [ jre phantomjs ];
     shellHook   = ''
       ${lolcat}/bin/lolcat ${./figlet}
       cat ${./intro}
