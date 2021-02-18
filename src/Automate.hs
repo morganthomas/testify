@@ -9,7 +9,9 @@ module Automate
   ) where
 
 
+import Control.Concurrent (threadDelay)
 import Control.Monad (forM, forM_)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -84,16 +86,22 @@ testifyOnHouseBill cfg day committee bill position person = do
   click continueEl3
 
 
-getHouseBills :: WebDriver m => Config -> Day -> m Agenda
+wait :: MonadIO m => m ()
+wait = liftIO $ threadDelay 1000000
+
+
+getHouseBills :: MonadIO m => WebDriver m => Config -> Day -> m Agenda
 getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
+  wait
   dayEl <- findElem (daySelector day)
   click dayEl
+  wait
   committees <- getHouseCommittees cfg
   Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getHouseCommitteeBills cfg c)
 
 
-getHouseCommittees :: WebDriver m => Config -> m [Committee]
+getHouseCommittees :: MonadIO m => WebDriver m => Config -> m [Committee]
 getHouseCommittees cfg = do
   els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
@@ -101,12 +109,14 @@ getHouseCommittees cfg = do
   return (zipWith Committee committeeNames committeeIds)
 
 
-getHouseCommitteeBills :: WebDriver m => Config -> Committee -> m [Bill]
+getHouseCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [Bill]
 getHouseCommitteeBills cfg committee = do
   select <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
   click select
+  wait
   option <- findElem $ committeeSelector cfg committee
   click option
+  wait
   billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText
@@ -116,12 +126,12 @@ getHouseCommitteeBills cfg committee = do
 
 committeeSelector :: Config -> Committee -> Selector
 committeeSelector cfg committee = ByCSS $ unHouseCommitteeDropdownSelector (houseCommitteeDropdownSelector cfg)
-                                       <> " option[value=\"" <> pack (show (unCommitteeId (committeeId committee))) <> "\"]"
+                                       <> " option[value=" <> pack (show (unCommitteeId (committeeId committee))) <> "]"
 
 
 billSelector :: Config -> Bill -> Selector
 billSelector cfg bill = ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
-                             <> " option[value=\"" <> pack (show (unBillId (billId bill))) <> "\"]"
+                             <> " option[value=" <> pack (show (unBillId (billId bill))) <> "]"
 
 
 daySelector :: Day -> Selector
