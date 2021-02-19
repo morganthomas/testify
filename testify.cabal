@@ -25,13 +25,16 @@ executable client
    , aeson
    , containers
    , exceptions
+   , generic-lens
    , jsaddle
+   , lens
    , mtl
    , servant
    , servant-client
    , Shpadoinkle
-   , Shpadoinkle-html
    , Shpadoinkle-backend-pardiff
+   , Shpadoinkle-html
+   , Shpadoinkle-lens
    , Shpadoinkle-router
    , text
    , time
