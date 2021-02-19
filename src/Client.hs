@@ -23,10 +23,9 @@ import           Types
 import           Types.Api
 
 
-getAgendaM :: Day -> ClientM AgendaResult
-testifyM :: Submission -> ClientM TestifyResult
-
-getAgendaM :<|> testifyM = client (Proxy @Api)
+class TestifyEffects m where
+  getAgenda :: Day -> m AgendaResult
+  testify :: Submission -> m TestifyResult
 
 
 newtype UIM a = UIM { runUIM :: JSM a }
@@ -35,13 +34,14 @@ newtype UIM a = UIM { runUIM :: JSM a }
   deriving newtype MonadJSM
 #endif
 
+instance TestifyEffects UIM where
+  getAgenda = UIM . runXHR . getAgendaM
+  testify = UIM . runXHR . testifyM
 
-getAgenda :: Day -> UIM AgendaResult
-getAgenda = UIM . runXHR . getAgendaM
 
-
-testify :: Submission -> UIM TestifyResult
-testify = UIM . runXHR . testifyM
+getAgendaM :: Day -> ClientM AgendaResult
+testifyM :: Submission -> ClientM TestifyResult
+getAgendaM :<|> testifyM = client (Proxy @Api)
 
 
 view :: () -> Html m ()
