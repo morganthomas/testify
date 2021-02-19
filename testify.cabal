@@ -25,6 +25,7 @@ executable client
    , aeson
    , containers
    , exceptions
+   , jsaddle
    , mtl
    , servant
    , servant-client
