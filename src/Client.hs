@@ -15,7 +15,8 @@ module Main where
 
 import           Prelude                     hiding (div)
 
-import           Control.Lens                ()
+import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
+import           Control.Lens                ((.~))
 import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
@@ -37,6 +38,7 @@ import           Shpadoinkle.Html
 import           Shpadoinkle.Lens            (onRecord)
 import           Shpadoinkle.Router.Client   (ClientM, client, runXHR)
 import           Shpadoinkle.Run             (live, runJSorWarp)
+import           UnliftIO.Concurrent         (forkIO)
 
 import           Types
 import           Types.Api
@@ -82,7 +84,7 @@ type Effects m =
   )
 
 
-data IsLoadingAgenda = IsLoadingAgenda | LoadedAgenda
+data IsLoadingAgenda = IsLoadingAgenda | IsNOTLoadingAgenda
   deriving (Eq, Generic, Show)
 
 
@@ -102,11 +104,15 @@ data ViewModel =
   deriving (Eq, Generic, Show)
 
 emptyViewModel :: Day -> ViewModel
-emptyViewModel day = ViewModel day IsLoadingAgenda (Agenda mempty) (Positions mempty) [] HaveNotSubmitted
+emptyViewModel day = ViewModel day IsNOTLoadingAgenda (Agenda mempty) (Positions mempty) [] HaveNotSubmitted
 
 
 daySelect :: Day -> Html m Day
 daySelect _ = div [] []
+
+
+getAgendaButton :: Day -> Html m Agenda
+getAgendaButton _ = div [] []
 
 
 agendaView :: ViewModel -> Html m ViewModel
@@ -130,6 +136,7 @@ view model =
   div
     [class' "app"]
     [ onRecord #vmDay $ daySelect (vmDay model)
+    , onRecord #vmAgenda $ getAgendaButton (vmDay model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
     , submitButton model
