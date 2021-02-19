@@ -57,6 +57,10 @@ newtype HouseEmailSelector = HouseEmailSelector { unHouseEmailSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseTownSelector = HouseTownSelector { unHouseTownSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype HouseContinueSelector2 = HouseContinueSelector2 { unHouseContinueSelector2 :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -87,6 +91,7 @@ data Config
     , houseFirstNameSelector :: HouseFirstNameSelector
     , houseLastNameSelector :: HouseLastNameSelector
     , houseEmailSelector :: HouseEmailSelector
+    , houseTownSelector :: HouseTownSelector
     , houseContinueSelector2 :: HouseContinueSelector2
     , houseAgreeSelector :: HouseAgreeSelector
     , houseContinueSelector3 :: HouseContinueSelector3
@@ -111,9 +116,10 @@ config =
   , houseSupportSelector = "#rdoPosition_0"
   , houseOpposeSelector = "#rdoPosition_1"
   , houseContinueSelector = "#btnContinue"
-  , houseFirstNameSelector = "#txtFirstName"
-  , houseLastNameSelector = "#txtLastName"
-  , houseEmailSelector = "#txtEmail"
+  , houseFirstNameSelector = "input[name=\"txtFirstName\"]"
+  , houseLastNameSelector = "input[name=\"txtLastName\"]"
+  , houseEmailSelector = "input[name=\"txtEmail\"]"
+  , houseTownSelector = "input[name=\"txtTown\"]"
   , houseContinueSelector2 = "#btnContinue"
   , houseAgreeSelector = "#chkAgree"
   , houseContinueSelector3 = "#btnContinue"

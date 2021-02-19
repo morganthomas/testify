@@ -78,6 +78,8 @@ testifyOnHouseBill cfg day committee bill position person = do
   sendKeys (unLastName (lastName person)) lastNameEl
   emailEl <- findElem . ByCSS . unHouseEmailSelector $ houseEmailSelector cfg
   sendKeys (unEmail (email person)) emailEl
+  townEl <- findElem . ByCSS . unHouseTownSelector $ houseTownSelector cfg
+  sendKeys (unTown (town person)) townEl
   continueEl2 <- findElem . ByCSS . unHouseContinueSelector2 $ houseContinueSelector2 cfg
   click continueEl2
   agreeEl <- findElem . ByCSS . unHouseAgreeSelector $ houseAgreeSelector cfg

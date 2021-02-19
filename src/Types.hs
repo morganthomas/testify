@@ -107,11 +107,19 @@ instance ToJSON Email
 instance FromJSON Email
 
 
+newtype Town = Town { unTown :: Text }
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance ToJSON Town
+instance FromJSON Town
+
+
 data PersonalInfo
   = PersonalInfo
     { firstName :: FirstName
     , lastName  :: LastName
     , email     :: Email
+    , town      :: Town
     }
   deriving (Eq, Show, Read, Generic)
 
