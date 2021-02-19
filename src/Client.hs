@@ -28,6 +28,7 @@ import           GHC.Generics                (Generic)
 import           Language.Javascript.JSaddle (runJSaddle)
 import           Servant.API
 import           Shpadoinkle                 (shpadoinkle, Html,
+                                              forgetC,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO))
@@ -81,21 +82,47 @@ type Effects m =
   )
 
 
+data IsLoadingAgenda = IsLoadingAgenda | LoadedAgenda
+  deriving (Eq, Generic, Show)
+
+
+data SubmissionStatus = HaveNotSubmitted | SubmissionProcessing | SubmissionSucceeded | SubmissionFailed ErrorMessage
+  deriving (Eq, Generic, Show)
+
+
 data ViewModel =
   ViewModel
   { vmDay       :: Day
+  , vmIsLoading :: IsLoadingAgenda
   , vmAgenda    :: Agenda
   , vmPositions :: Positions
   , vmPersons   :: [PersonalInfo]
+  , vmStatus    :: SubmissionStatus
   }
   deriving (Eq, Generic, Show)
 
 emptyViewModel :: Day -> ViewModel
-emptyViewModel day = ViewModel day (Agenda mempty) (Positions mempty) []
+emptyViewModel day = ViewModel day IsLoadingAgenda (Agenda mempty) (Positions mempty) [] HaveNotSubmitted
 
 
 daySelect :: Day -> Html m Day
 daySelect _ = div [] []
+
+
+agendaView :: ViewModel -> Html m ViewModel
+agendaView _ = div [] []
+
+
+personsView :: [PersonalInfo] -> Html m [PersonalInfo]
+personsView _ = div [] []
+
+
+submitButton :: ViewModel -> Html m ViewModel
+submitButton _ = div [] []
+
+
+statusView :: SubmissionStatus -> Html m ()
+statusView _ = div [] []
 
 
 view :: Effects m => ViewModel -> Html m ViewModel
@@ -103,6 +130,10 @@ view model =
   div
     [class' "app"]
     [ onRecord #vmDay $ daySelect (vmDay model)
+    , agendaView model
+    , onRecord #vmPersons $ personsView (vmPersons model)
+    , submitButton model
+    , forgetC $ statusView (vmStatus model)
     ]
 
 
