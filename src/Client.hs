@@ -29,8 +29,9 @@ import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay),
 import           GHC.Generics                (Generic)
 import           Language.Javascript.JSaddle (runJSaddle)
 import           Servant.API
-import           Shpadoinkle                 (shpadoinkle, Html,
-                                              forgetC, liftC,
+import           Shpadoinkle                 (shpadoinkle, Html, NFData,
+                                              forgetC, liftC, voidRunContinuationT,
+                                              pur, impur, commit, merge,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO))
@@ -88,9 +89,13 @@ type Effects m =
 data IsLoadingAgenda = IsLoadingAgenda | IsNOTLoadingAgenda
   deriving (Eq, Generic, Show)
 
+instance NFData IsLoadingAgenda
+
 
 data SubmissionStatus = HaveNotSubmitted | SubmissionProcessing | SubmissionSucceeded | SubmissionFailed ErrorMessage
   deriving (Eq, Generic, Show)
+
+instance NFData SubmissionStatus
 
 
 data ViewModel =
@@ -103,6 +108,8 @@ data ViewModel =
   , vmStatus    :: SubmissionStatus
   }
   deriving (Eq, Generic, Show)
+
+instance NFData ViewModel
 
 emptyViewModel :: Day -> ViewModel
 emptyViewModel day = ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) [] HaveNotSubmitted
@@ -162,7 +169,7 @@ setDay :: DayOfMonth -> Day -> Day
 setDay (DayOfMonth d) day = let (y, m, _) = toGregorian day in fromGregorian y m d
 
 
-selectFrom :: Eq a => Show a => [a] -> a -> Html m a
+selectFrom :: Applicative m => Eq a => Show a => [a] -> a -> Html m a
 selectFrom opts oSelected =
   select []
   ( (\o ->
@@ -180,7 +187,7 @@ years :: [Year]
 years = Year <$> [2020..2050]
 
 
-yearSelect :: Year -> Html m Year
+yearSelect :: Applicative m => Year -> Html m Year
 yearSelect = selectFrom years
 
 
@@ -188,7 +195,7 @@ months :: [MonthOfYear]
 months = MonthOfYear <$> [1..12]
 
 
-monthSelect :: MonthOfYear -> Html m MonthOfYear
+monthSelect :: Applicative m => MonthOfYear -> Html m MonthOfYear
 monthSelect = selectFrom months
 
 
@@ -196,11 +203,11 @@ days :: [DayOfMonth]
 days = DayOfMonth <$> [1..31]
 
 
-dayOfMonthSelect :: DayOfMonth -> Html m DayOfMonth
+dayOfMonthSelect :: Applicative m => DayOfMonth -> Html m DayOfMonth
 dayOfMonthSelect = selectFrom days
 
 
-dateSelect :: Functor m => Day -> Html m Day
+dateSelect :: Applicative m => Day -> Html m Day
 dateSelect day =
   let (y, m, d) = toGregorian day in
   div
@@ -211,26 +218,55 @@ dateSelect day =
     ]
 
 
-getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m (Maybe AgendaResult)
+getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m ViewModel
 getAgendaButton day =
   button
-    [ onClickM (const . Just <$> getAgenda day) ]
+    [ onClickC . voidRunContinuationT $ do
+        commit . pur $ \m -> m { vmIsLoading = IsLoadingAgenda }
+        commit . merge . impur $ (\a m -> m { vmAgenda = a }) . Just <$> getAgenda day
+        commit . pur $ \m -> m { vmIsLoading = IsNOTLoadingAgenda }
+    ]
     [ text "Get Agenda" ]
 
 
-agendaView :: ViewModel -> Html m ViewModel
+agendaView :: Applicative m => ViewModel -> Html m ViewModel
 agendaView _ = div [] []
 
 
-personsView :: [PersonalInfo] -> Html m [PersonalInfo]
+personsView :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
 personsView _ = div [] []
 
 
-submitButton :: ViewModel -> Html m ViewModel
-submitButton _ = div [] []
+submitButton :: Monad m => TestifyEffects m
+             => ViewModel -> Html m ViewModel
+submitButton vm =
+  case vmAgenda vm of
+    Just (AgendaResult (Right _)) ->
+      if null (unPositions (vmPositions vm))
+      then disabledButton
+      else enabledButton
+    _ -> disabledButton
+  where
+    disabledButton =
+      button
+        [ disabled True ]
+        [ text "Submit" ]
+
+    enabledButton =
+      button
+        [ onClickC . voidRunContinuationT $ do
+            commit . pur $ \m -> m { vmStatus = SubmissionProcessing }
+            commit . merge . impur $ (\res m -> m { vmStatus = toStatus res }) <$> testify submission
+        ]
+        [ text "Submit" ]
+
+    toStatus (TestifyResult (Left err)) = SubmissionFailed err
+    toStatus (TestifyResult (Right Success)) = SubmissionSucceeded
+
+    submission = Submission (vmPositions vm) (vmPersons vm) (vmDay vm)
 
 
-statusView :: SubmissionStatus -> Html m ()
+statusView :: Applicative m => SubmissionStatus -> Html m ()
 statusView _ = div [] []
 
 
@@ -239,7 +275,7 @@ view model =
   div
     [class' "app"]
     [ onRecord #vmDay $ dateSelect (vmDay model)
-    , onRecord #vmAgenda $ getAgendaButton (vmDay model)
+    , getAgendaButton (vmDay model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
     , submitButton model
