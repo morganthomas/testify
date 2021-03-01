@@ -2,6 +2,7 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE ExplicitNamespaces         #-}
 {-# LANGUAGE ExtendedDefaultRules       #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -22,14 +23,14 @@ import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Data.Generics.Labels        ()
 import           Data.Proxy                  (Proxy (Proxy))
-import           Data.Text                   (Text)
-import           Data.Time.Calendar          (Day)
+import           Data.Text                   (Text, pack)
+import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
 import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
 import           GHC.Generics                (Generic)
 import           Language.Javascript.JSaddle (runJSaddle)
 import           Servant.API
 import           Shpadoinkle                 (shpadoinkle, Html,
-                                              forgetC,
+                                              forgetC, liftC,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO))
@@ -107,8 +108,107 @@ emptyViewModel :: Day -> ViewModel
 emptyViewModel day = ViewModel day IsNOTLoadingAgenda (Agenda mempty) (Positions mempty) [] HaveNotSubmitted
 
 
-daySelect :: Day -> Html m Day
-daySelect _ = div [] []
+newtype Year = Year { unYear :: Integer }
+  deriving (Eq, Generic)
+  deriving newtype Show
+
+
+newtype MonthOfYear = MonthOfYear { unMonthOfYear :: Int }
+  deriving (Eq, Generic)
+
+instance Show MonthOfYear where
+  show (MonthOfYear n) =
+    case n of
+      1  -> "January"
+      2  -> "February"
+      3  -> "March"
+      4  -> "April"
+      5  -> "May"
+      6  -> "June"
+      7  -> "July"
+      8  -> "August"
+      9  -> "September"
+      10 -> "October"
+      11 -> "November"
+      12 -> "December"
+      _  -> "Unknown Month"
+
+
+newtype DayOfMonth = DayOfMonth { unDayOfMonth :: Int }
+  deriving (Eq, Generic, Show)
+
+
+getYear :: Day -> Year
+getYear day = let (y, _, _) = toGregorian day in Year y
+
+
+getMonth :: Day -> MonthOfYear
+getMonth day = let (_, m, _) = toGregorian day in MonthOfYear m
+
+
+getDay :: Day -> DayOfMonth
+getDay day = let (_, _, d) = toGregorian day in DayOfMonth d
+
+
+setYear :: Year -> Day -> Day
+setYear (Year y) day = let (_, m, d) = toGregorian day in fromGregorian y m d
+
+
+setMonth :: MonthOfYear -> Day -> Day
+setMonth (MonthOfYear m) day = let (y, _, d) = toGregorian day in fromGregorian y m d
+
+
+setDay :: DayOfMonth -> Day -> Day
+setDay (DayOfMonth d) day = let (y, m, _) = toGregorian day in fromGregorian y m d
+
+
+selectFrom :: Eq a => Show a => [a] -> a -> Html m a
+selectFrom opts oSelected =
+  select []
+  ( (\o ->
+      option
+        [ value (pack (show o))
+        , onClick (const o)
+        , selected (o == oSelected)
+        ]
+        [ text (pack (show o)) ]
+    )
+    <$> opts )
+
+
+years :: [Year]
+years = Year <$> [2020..2050]
+
+
+yearSelect :: Year -> Html m Year
+yearSelect = selectFrom years
+
+
+months :: [MonthOfYear]
+months = MonthOfYear <$> [1..12]
+
+
+monthSelect :: MonthOfYear -> Html m MonthOfYear
+monthSelect = selectFrom months
+
+
+days :: [DayOfMonth]
+days = DayOfMonth <$> [1..31]
+
+
+dayOfMonthSelect :: DayOfMonth -> Html m DayOfMonth
+dayOfMonthSelect = selectFrom days
+
+
+dateSelect :: Functor m => Day -> Html m Day
+dateSelect day =
+  let (y, m, d) = toGregorian day in
+  div
+    [ class' "date-select" ]
+    [ liftC setYear  getYear  $ yearSelect (Year y)
+    , liftC setMonth getMonth $ monthSelect (MonthOfYear m)
+    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth m)
+    ]
 
 
 getAgendaButton :: Day -> Html m Agenda
@@ -135,7 +235,7 @@ view :: Effects m => ViewModel -> Html m ViewModel
 view model =
   div
     [class' "app"]
-    [ onRecord #vmDay $ daySelect (vmDay model)
+    [ onRecord #vmDay $ dateSelect (vmDay model)
     , onRecord #vmAgenda $ getAgendaButton (vmDay model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
