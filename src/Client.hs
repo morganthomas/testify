@@ -222,9 +222,9 @@ getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m ViewModel
 getAgendaButton day =
   button
     [ onClickC . voidRunContinuationT $ do
-        commit . pur $ \m -> m { vmIsLoading = IsLoadingAgenda }
-        commit . merge . impur $ (\a m -> m { vmAgenda = a }) . Just <$> getAgenda day
-        commit . pur $ \m -> m { vmIsLoading = IsNOTLoadingAgenda }
+        commit . pur $ #vmIsLoading .~ IsLoadingAgenda
+        commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day
+        commit . pur $ #vmIsLoading .~ IsNOTLoadingAgenda
     ]
     [ text "Get Agenda" ]
 
@@ -255,8 +255,8 @@ submitButton vm =
     enabledButton =
       button
         [ onClickC . voidRunContinuationT $ do
-            commit . pur $ \m -> m { vmStatus = SubmissionProcessing }
-            commit . merge . impur $ (\res m -> m { vmStatus = toStatus res }) <$> testify submission
+            commit . pur $ #vmStatus .~ SubmissionProcessing
+            commit . merge . impur $ (#vmStatus .~) . toStatus <$> testify submission
         ]
         [ text "Submit" ]
 
