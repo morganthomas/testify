@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric              #-}
 
 
 module Types where
@@ -7,6 +8,7 @@ module Types where
 import Data.Aeson (ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 import Data.Map (Map)
 import Data.Set (Set)
+import Data.String (IsString)
 import Data.Text (Text)
 import Data.Time.Calendar (Day)
 import GHC.Generics (Generic)
@@ -97,7 +99,7 @@ instance FromJSON Positions
 
 
 newtype FirstName = FirstName { unFirstName :: Text }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
 
 instance NFData FirstName
 instance ToJSON FirstName
@@ -105,7 +107,7 @@ instance FromJSON FirstName
 
 
 newtype LastName = LastName { unLastName :: Text }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
 
 instance NFData LastName
 instance ToJSON LastName
@@ -113,7 +115,7 @@ instance FromJSON LastName
 
 
 newtype Email = Email { unEmail :: Text }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
 
 instance NFData Email
 instance ToJSON Email
@@ -121,7 +123,7 @@ instance FromJSON Email
 
 
 newtype Town = Town { unTown :: Text }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
 
 instance NFData Town
 instance ToJSON Town

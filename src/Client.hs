@@ -233,8 +233,34 @@ agendaView :: Applicative m => ViewModel -> Html m ViewModel
 agendaView _ = div [] []
 
 
+emptyPersonalInfo :: PersonalInfo
+emptyPersonalInfo = PersonalInfo "" "" "" ""
+
+
+editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
+editPerson person =
+  div
+    [ class' "edit-person" ]
+    [ button
+        [ onClick (filter (/= person)) ]
+        [ text "x" ]
+    ] 
+
+
+addPerson :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
+addPerson persons =
+  button
+    [ onClick (<> [emptyPersonalInfo]) ]
+    [ text "Add Person" ]
+
+
 personsView :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
-personsView _ = div [] []
+personsView persons =
+  div
+    []
+    (  ( editPerson <$> persons )
+    <> [ addPerson persons ]
+    )
 
 
 submitButton :: Monad m => TestifyEffects m
