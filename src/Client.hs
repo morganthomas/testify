@@ -8,6 +8,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedLabels           #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TypeApplications           #-}
 
 
@@ -17,7 +18,7 @@ module Main where
 import           Prelude                     hiding (div)
 
 import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
-import           Control.Lens                ((.~))
+import           Control.Lens                (Lens', (.~), (^.))
 import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
@@ -237,11 +238,32 @@ emptyPersonalInfo :: PersonalInfo
 emptyPersonalInfo = PersonalInfo "" "" "" ""
 
 
+editField :: Applicative m => Text -> (a -> Text) -> (Text -> a) -> Lens' PersonalInfo a -> PersonalInfo -> Html m [PersonalInfo]
+editField label toTxt fromTxt lens person =
+  div
+    [ class' "edit-field" ]
+    [ text label
+    , input
+        [ ("type", "text")
+        , value (toTxt $ person ^. lens)
+        , onInput (\new -> replace person (lens .~ fromTxt new $ person))
+        ]
+        []
+    ]
+  where
+    replace :: Eq a => a -> a -> [a] -> [a]
+    replace x y = fmap (\z -> if z == x then y else z)
+
+
 editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
 editPerson person =
   div
     [ class' "edit-person" ]
-    [ button
+    [ editField "First Name" unFirstName FirstName #firstName person
+    , editField "Last Name" unLastName LastName #lastName person
+    , editField "Email" unEmail Email #email person
+    , editField "Town" unTown Town #town person
+    , button
         [ onClick (filter (/= person)) ]
         [ text "x" ]
     ] 
