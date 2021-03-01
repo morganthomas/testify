@@ -97,7 +97,7 @@ data ViewModel =
   ViewModel
   { vmDay       :: Day
   , vmIsLoading :: IsLoadingAgenda
-  , vmAgenda    :: Agenda
+  , vmAgenda    :: Maybe AgendaResult
   , vmPositions :: Positions
   , vmPersons   :: [PersonalInfo]
   , vmStatus    :: SubmissionStatus
@@ -105,7 +105,7 @@ data ViewModel =
   deriving (Eq, Generic, Show)
 
 emptyViewModel :: Day -> ViewModel
-emptyViewModel day = ViewModel day IsNOTLoadingAgenda (Agenda mempty) (Positions mempty) [] HaveNotSubmitted
+emptyViewModel day = ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) [] HaveNotSubmitted
 
 
 newtype Year = Year { unYear :: Integer }
@@ -211,8 +211,11 @@ dateSelect day =
     ]
 
 
-getAgendaButton :: Day -> Html m Agenda
-getAgendaButton _ = div [] []
+getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m (Maybe AgendaResult)
+getAgendaButton day =
+  button
+    [ onClickM (const . Just <$> getAgenda day) ]
+    [ text "Get Agenda" ]
 
 
 agendaView :: ViewModel -> Html m ViewModel
