@@ -181,7 +181,8 @@ selectFrom opts oSelected =
         ]
         [ text (pack (show o)) ]
     )
-    <$> opts )
+    <$> opts
+  )
 
 
 years :: [Year]
