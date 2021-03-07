@@ -15,7 +15,7 @@
 module Main where
 
 
-import           Prelude                     hiding (div)
+import           Prelude                     hiding (div, span)
 
 import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
 import           Control.Lens                (Lens', (.~), (^.))
@@ -259,13 +259,22 @@ billView vm agenda cm bill =
         [ class' "bill-title" ]
         [ text (unBillName (billName bill)) ]
     , div
-        [ class' "position" ]
-        $ billPositionButton vm agenda cm bill <$> [ Support, Neutral, Oppose ]
+        [ class' "bill-positions" ]
+        $ billPositionView vm agenda cm bill <$> [ Support, Neutral, Oppose ]
     ]
 
 
-billPositionButton :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
-billPositionButton _ _ _ _ _ = div [] []
+billPositionView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
+billPositionView _vm _agenda _cm bill pos =
+  span
+    [ class' "bill-position" ]
+    [ text (pack (show pos))
+    , input
+        [ ("type", "radio")
+        , name' (unBillId (billId bill))
+        ]
+        []
+    ]
 
 
 emptyPersonalInfo :: PersonalInfo
