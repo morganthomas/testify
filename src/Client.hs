@@ -18,7 +18,8 @@ module Main where
 import           Prelude                     hiding (div, span)
 
 import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
-import           Control.Lens                (Lens', (.~), (^.))
+import           Control.Lens                (Lens', (.~), (^.), at)
+import           Control.Lens.Prism          (_Just)
 import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
@@ -40,6 +41,7 @@ import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO))
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
+import           Shpadoinkle.DeveloperTools  (withDeveloperTools)
 import           Shpadoinkle.Html
 import           Shpadoinkle.Lens            (onRecord)
 import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
@@ -101,13 +103,13 @@ type Effects m =
 
 
 data IsLoadingAgenda = IsLoadingAgenda | IsNOTLoadingAgenda
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic, Read, Show)
 
 instance NFData IsLoadingAgenda
 
 
 data SubmissionStatus = HaveNotSubmitted | SubmissionProcessing | SubmissionSucceeded | SubmissionFailed ErrorMessage
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic, Read, Show)
 
 instance NFData SubmissionStatus
 
@@ -121,7 +123,7 @@ data ViewModel =
   , vmPersons   :: [PersonalInfo]
   , vmStatus    :: SubmissionStatus
   }
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic, Read, Show)
 
 instance NFData ViewModel
 
@@ -287,13 +289,14 @@ billView vm agenda cm bill =
 
 
 billPositionView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
-billPositionView _vm _agenda _cm bill pos =
+billPositionView _vm _agenda cm bill pos =
   span
     [ class' "bill-position" ]
     [ text (pack (show pos))
     , input
         [ ("type", "radio")
         , name' (unBillId (billId bill))
+        , onClick $ #vmPositions . #unPositions . at cm . _Just . at bill . _Just .~ pos
         ]
         []
     ]
@@ -414,6 +417,7 @@ app = do
   let tomorrow = utctDay (addUTCTime nominalDay now)
       initialModel = emptyViewModel tomorrow
   model <- newTVarIO initialModel
+  withDeveloperTools model
   shpadoinkle runUIM runParDiff model view getBody
 
 

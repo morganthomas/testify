@@ -35,6 +35,7 @@ executable client
    , servant-client
    , Shpadoinkle
    , Shpadoinkle-backend-pardiff
+   , Shpadoinkle-developer-tools
    , Shpadoinkle-html
    , Shpadoinkle-lens
    , Shpadoinkle-router
