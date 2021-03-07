@@ -15,6 +15,16 @@ import GHC.Generics (Generic)
 import Shpadoinkle (NFData)
 
 
+data MultiPersonFeature = MultiPersonFeature | NoMultiPersonFeature
+  deriving (Eq, Ord, Show, Read, Generic)
+
+
+data Features =
+  Features
+  { multiPersonFeature :: MultiPersonFeature
+  } deriving (Eq, Ord, Show, Read, Generic)
+
+
 newtype BillName = BillName { unBillName :: Text }
   deriving (Eq, Ord, Show, Read, Generic)
 

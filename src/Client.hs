@@ -52,6 +52,10 @@ import           Types.Api
 default (Text)
 
 
+features :: Features
+features = Features NoMultiPersonFeature
+
+
 class TestifyEffects m where
   getAgenda :: Day -> m AgendaResult
   testify :: Submission -> m TestifyResult
@@ -122,7 +126,13 @@ data ViewModel =
 instance NFData ViewModel
 
 emptyViewModel :: Day -> ViewModel
-emptyViewModel day = ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) [] HaveNotSubmitted
+emptyViewModel day =
+  ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) initialPersons HaveNotSubmitted
+  where
+    initialPersons =
+      case multiPersonFeature features of
+        MultiPersonFeature -> []
+        NoMultiPersonFeature -> [emptyPersonalInfo]
 
 
 newtype Year = Year { unYear :: Integer }
@@ -309,14 +319,22 @@ editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
 editPerson person =
   div
     [ class' "edit-person" ]
+    $
     [ editField "First Name" unFirstName FirstName #firstName person
     , editField "Last Name" unLastName LastName #lastName person
     , editField "Email" unEmail Email #email person
     , editField "Town" unTown Town #town person
-    , button
-        [ onClick (filter (/= person)) ]
-        [ text "x" ]
-    ] 
+    ]
+    ++
+    (
+      case multiPersonFeature features of
+        MultiPersonFeature ->
+          [ button
+              [ onClick (filter (/= person)) ]
+              [ text "x" ]
+          ] 
+        NoMultiPersonFeature -> []
+    )
 
 
 addPerson :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
@@ -328,11 +346,15 @@ addPerson persons =
 
 personsView :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
 personsView persons =
-  div
-    []
-    (  ( editPerson <$> persons )
-    <> [ addPerson persons ]
-    )
+  case multiPersonFeature features of
+    MultiPersonFeature ->
+      div
+        []
+        (  ( editPerson <$> persons )
+        <> [ addPerson persons ]
+        )
+    NoMultiPersonFeature ->
+      div [] ( editPerson <$> persons )
 
 
 submitButton :: Monad m => TestifyEffects m
