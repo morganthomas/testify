@@ -9,6 +9,7 @@
 {-# LANGUAGE OverloadedLabels           #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeApplications           #-}
 
 
@@ -248,6 +249,15 @@ getAgendaButton day =
     [ onClickC . voidRunContinuationT $ do
         commit . pur $ #vmIsLoading .~ IsLoadingAgenda
         commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day
+        commit . pur $
+          \vm ->
+            case vmAgenda vm of
+              Just (AgendaResult (Right (Agenda agenda))) ->
+                (#vmPositions . #unPositions) .~
+                  (Map.fromList . fmap (,Nothing) . Set.toList
+                    <$> agenda)
+                $ vm
+              _ -> vm
         commit . pur $ #vmIsLoading .~ IsNOTLoadingAgenda
     ]
     [ text "Get Agenda" ]
@@ -296,7 +306,7 @@ billPositionView _vm _agenda cm bill pos =
     , input
         [ ("type", "radio")
         , name' (unBillId (billId bill))
-        , onClick $ #vmPositions . #unPositions . at cm . _Just . at bill . _Just .~ pos
+        , onClick $ #vmPositions . #unPositions . at cm . _Just . at bill . _Just .~ Just pos
         ]
         []
     ]

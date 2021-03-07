@@ -14,7 +14,7 @@ import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, maybeToList)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
 import Test.WebDriver (WD)
@@ -30,7 +30,7 @@ import Types
 
 testifyOnHouseBills :: WebDriver m => Config -> Submission -> m ()
 testifyOnHouseBills cfg subm =
-  let posMap :: Map Committee (Map Bill Position)
+  let posMap :: Map Committee (Map Bill (Maybe Position))
       posMap = unPositions $ positions subm
 
       people :: [PersonalInfo]
@@ -42,7 +42,8 @@ testifyOnHouseBills cfg subm =
       forms :: [(Committee, Bill, Position, PersonalInfo)]
       forms = do
         (c, bills) <- Map.toList posMap
-        (bill, pos) <- Map.toList bills
+        (bill, mpos) <- Map.toList bills
+        pos <- maybeToList mpos
         person <- people
         return (c, bill, pos, person)
 

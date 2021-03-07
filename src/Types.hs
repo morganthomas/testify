@@ -100,7 +100,7 @@ instance ToJSON Position
 instance FromJSON Position
 
 
-newtype Positions = Positions { unPositions :: Map Committee (Map Bill Position) }
+newtype Positions = Positions { unPositions :: Map Committee (Map Bill (Maybe Position)) }
   deriving (Eq, Ord, Show, Read, Generic)
 
 instance NFData Positions
