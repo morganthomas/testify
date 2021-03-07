@@ -257,7 +257,10 @@ agendaView vm =
     case vmAgenda vm of
       Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
         uncurry (committeeView vm agenda) <$> Map.toList agendaMap
-      _ -> []
+      _ ->
+        case vmIsLoading vm of
+          IsLoadingAgenda -> [ text "Loading agenda..." ]
+          IsNOTLoadingAgenda -> [ ]
 
 
 committeeView :: Applicative m => ViewModel -> Agenda -> Committee -> Set Bill -> Html m ViewModel
