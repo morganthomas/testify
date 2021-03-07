@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 
 
 module Api ( app ) where
@@ -16,13 +17,14 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
+import Data.Aeson (Value (String))
 import Data.Proxy
 import Data.Time.Calendar
 import GHC.Generics
 import Servant
 import Test.WebDriver (Browser (..), sessions, runWD, useBrowser, createSession, runSession)
-import Test.WebDriver.Capabilities (defaultCaps, phantomjs)
-import Test.WebDriver.Config (WDConfig, defaultConfig)
+import Test.WebDriver.Capabilities (Capabilities (additionalCaps), defaultCaps, phantomjs)
+import Test.WebDriver.Config (WDConfig (wdCapabilities), defaultConfig)
 import Test.WebDriver.Session (WDSession)
 
 
@@ -46,11 +48,19 @@ instance Monad m => HasConfig (AutomateT m) where
 
 
 browser :: Browser
-browser = Phantomjs (Just "/run/current-system/sw/bin/phantomjs") []
+browser = Phantomjs (Just "/nix/store/afygm6wrkdr2g7g8079kjd3lhz1vlnmx-phantomjs-2.1.1/bin/phantomjs") []
 
 
-sessionConfig :: WDConfig
-sessionConfig = useBrowser browser defaultConfig
+sessionConfig :: Config -> WDConfig
+sessionConfig cfg =
+  useBrowser browser
+  defaultConfig
+    { wdCapabilities = (wdCapabilities defaultConfig)
+      { additionalCaps = [ ( "phantomjs.page.settings.userAgent"
+                           ,  String . unUserAgentString $ userAgentString cfg )
+                         ]
+      }
+    }
 
 
 server :: Config -> IO (Server Api)
@@ -71,7 +81,7 @@ getAgendaHandler :: HasConfig m => MonadIO m
                  => Day -> m AgendaResult
 getAgendaHandler day = do
   cfg <- getConfig
-  liftIO $ AgendaResult . Right <$> runSession sessionConfig (getHouseBills cfg day)
+  liftIO $ AgendaResult . Right <$> runSession (sessionConfig cfg) (getHouseBills cfg day)
 
 
 testifyHandler :: HasConfig m => MonadIO m
@@ -79,4 +89,4 @@ testifyHandler :: HasConfig m => MonadIO m
 testifyHandler subm = do
   cfg <- getConfig
   liftIO $ TestifyResult (Right Success)
-    <$ runSession sessionConfig (testifyOnHouseBills cfg subm)
+    <$ runSession (sessionConfig cfg) (testifyOnHouseBills cfg subm)

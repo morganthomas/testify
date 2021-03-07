@@ -140,7 +140,8 @@ daySelector :: Day -> Selector
 daySelector day =
   let (_, month, dayOfMonth) = toGregorian day
       monthText = monthToText month
-  in ByCSS $ "a[title=\"" <> monthText <> " " <> pack (show dayOfMonth) <> "\"]"
+      leadingZero = if dayOfMonth < 10 then "0" else ""
+  in ByCSS $ "a[title=\"" <> monthText <> " " <> leadingZero <> pack (show dayOfMonth) <> "\"]"
 
 
 monthToText :: Int -> Text

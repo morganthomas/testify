@@ -15,7 +15,7 @@
 module Main where
 
 
-import           Prelude                     hiding (div)
+import           Prelude                     hiding (div, span)
 
 import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
 import           Control.Lens                (Lens', (.~), (^.))
@@ -23,7 +23,10 @@ import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Data.Generics.Labels        ()
+import qualified Data.Map                    as Map
 import           Data.Proxy                  (Proxy (Proxy))
+import           Data.Set                    (Set)
+import qualified Data.Set                    as Set
 import           Data.Text                   (Text, pack)
 import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
 import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
@@ -39,7 +42,7 @@ import           Shpadoinkle                 (shpadoinkle, Html, NFData,
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.Html
 import           Shpadoinkle.Lens            (onRecord)
-import           Shpadoinkle.Router.Client   (ClientM, client, runXHR)
+import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
 import           Shpadoinkle.Run             (live, runJSorWarp)
 import           UnliftIO.Concurrent         (forkIO)
 
@@ -47,6 +50,10 @@ import           Types
 import           Types.Api
 
 default (Text)
+
+
+features :: Features
+features = Features NoMultiPersonFeature
 
 
 class TestifyEffects m where
@@ -65,9 +72,15 @@ instance MonadUnliftIO UIM where
     c <- askJSM
     return $ UnliftIO $ \(UIM m) -> runJSaddle @IO c m
 
+clientEnv :: ClientEnv
+clientEnv = ClientEnv (BaseUrl Http "localhost" 8008 "")
+
+toUIM :: ClientM a -> UIM a
+toUIM = UIM . flip runXHR' clientEnv
+
 instance TestifyEffects UIM where
-  getAgenda = UIM . runXHR . getAgendaM
-  testify = UIM . runXHR . testifyM
+  getAgenda = toUIM . getAgendaM
+  testify = toUIM . testifyM
 
 instance ( Monad m, MonadTrans t, TestifyEffects m ) => TestifyEffects (t m) where
   getAgenda = lift . getAgenda
@@ -113,7 +126,13 @@ data ViewModel =
 instance NFData ViewModel
 
 emptyViewModel :: Day -> ViewModel
-emptyViewModel day = ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) [] HaveNotSubmitted
+emptyViewModel day =
+  ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) initialPersons HaveNotSubmitted
+  where
+    initialPersons =
+      case multiPersonFeature features of
+        MultiPersonFeature -> []
+        NoMultiPersonFeature -> [emptyPersonalInfo]
 
 
 newtype Year = Year { unYear :: Integer }
@@ -217,7 +236,7 @@ dateSelect day =
     [ class' "date-select" ]
     [ liftC setYear  getYear  $ yearSelect (Year y)
     , liftC setMonth getMonth $ monthSelect (MonthOfYear m)
-    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth m)
+    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
     ]
 
 
@@ -233,7 +252,49 @@ getAgendaButton day =
 
 
 agendaView :: Applicative m => ViewModel -> Html m ViewModel
-agendaView _ = div [] [] -- TODO
+agendaView vm =
+  div [] $
+    case vmAgenda vm of
+      Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
+        uncurry (committeeView vm agenda) <$> Map.toList agendaMap
+      _ ->
+        case vmIsLoading vm of
+          IsLoadingAgenda -> [ text "Loading agenda..." ]
+          IsNOTLoadingAgenda -> [ ]
+
+
+committeeView :: Applicative m => ViewModel -> Agenda -> Committee -> Set Bill -> Html m ViewModel
+committeeView vm agenda cm bills = div [] $
+    div
+      [ class' "committee-header" ]
+      [ text (unCommitteeName (committeeName cm)) ]
+  : ( billView vm agenda cm <$> Set.toList bills )
+
+
+billView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Html m ViewModel
+billView vm agenda cm bill =
+  div
+    [ class' "bill" ]
+    [ div
+        [ class' "bill-title" ]
+        [ text (unBillName (billName bill)) ]
+    , div
+        [ class' "bill-positions" ]
+        $ billPositionView vm agenda cm bill <$> [ Support, Neutral, Oppose ]
+    ]
+
+
+billPositionView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
+billPositionView _vm _agenda _cm bill pos =
+  span
+    [ class' "bill-position" ]
+    [ text (pack (show pos))
+    , input
+        [ ("type", "radio")
+        , name' (unBillId (billId bill))
+        ]
+        []
+    ]
 
 
 emptyPersonalInfo :: PersonalInfo
@@ -261,14 +322,22 @@ editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
 editPerson person =
   div
     [ class' "edit-person" ]
+    $
     [ editField "First Name" unFirstName FirstName #firstName person
     , editField "Last Name" unLastName LastName #lastName person
     , editField "Email" unEmail Email #email person
     , editField "Town" unTown Town #town person
-    , button
-        [ onClick (filter (/= person)) ]
-        [ text "x" ]
-    ] 
+    ]
+    ++
+    (
+      case multiPersonFeature features of
+        MultiPersonFeature ->
+          [ button
+              [ onClick (filter (/= person)) ]
+              [ text "x" ]
+          ] 
+        NoMultiPersonFeature -> []
+    )
 
 
 addPerson :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
@@ -280,11 +349,15 @@ addPerson persons =
 
 personsView :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
 personsView persons =
-  div
-    []
-    (  ( editPerson <$> persons )
-    <> [ addPerson persons ]
-    )
+  case multiPersonFeature features of
+    MultiPersonFeature ->
+      div
+        []
+        (  ( editPerson <$> persons )
+        <> [ addPerson persons ]
+        )
+    NoMultiPersonFeature ->
+      div [] ( editPerson <$> persons )
 
 
 submitButton :: Monad m => TestifyEffects m
