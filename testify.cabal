@@ -16,6 +16,7 @@ executable server
    , time
    , transformers
    , transformers-base
+   , wai-cors
    , warp
    , webdriver
   hs-source-dirs:      src

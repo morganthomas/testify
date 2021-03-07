@@ -9,9 +9,10 @@ import Network.Wai.Handler.Warp (run)
 import Api
 import Automate
 import Config
-import System.Process (readProcess)
 import Types
 import Types.Api
+
+import System.Process (readProcess)
 
 
 getPhantomjsPath :: IO PhantomjsPath

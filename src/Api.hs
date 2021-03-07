@@ -21,6 +21,7 @@ import Data.Aeson (Value (String))
 import Data.Proxy
 import Data.Time.Calendar
 import GHC.Generics
+import Network.Wai.Middleware.Cors (simpleCors)
 import Servant
 import Test.WebDriver (Browser (..), sessions, runWD, useBrowser, createSession, runSession)
 import Test.WebDriver.Capabilities (Capabilities (additionalCaps), defaultCaps, phantomjs)
@@ -29,7 +30,7 @@ import Test.WebDriver.Session (WDSession)
 
 
 app :: Config -> IO Application
-app = fmap (serve api) . server
+app = fmap (simpleCors . serve api) . server
 
 
 api :: Proxy Api
