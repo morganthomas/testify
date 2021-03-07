@@ -238,17 +238,34 @@ agendaView :: Applicative m => ViewModel -> Html m ViewModel
 agendaView vm =
   div [] $
     case vmAgenda vm of
-      Just (AgendaResult (Right (Agenda agenda))) ->
-        uncurry (committeeView vm) <$> Map.toList agenda
+      Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
+        uncurry (committeeView vm agenda) <$> Map.toList agendaMap
       _ -> []
 
 
-committeeView :: Applicative m => ViewModel -> Committee -> Set Bill -> Html m ViewModel
-committeeView vm cm bills = div [] $ billView vm cm <$> Set.toList bills
+committeeView :: Applicative m => ViewModel -> Agenda -> Committee -> Set Bill -> Html m ViewModel
+committeeView vm agenda cm bills = div [] $
+    div
+      [ class' "committee-header" ]
+      [ text (unCommitteeName (committeeName cm)) ]
+  : ( billView vm agenda cm <$> Set.toList bills )
 
 
-billView :: Applicative m => ViewModel -> Committee -> Bill -> Html m ViewModel
-billView _ _ _ = div [] []
+billView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Html m ViewModel
+billView vm agenda cm bill =
+  div
+    [ class' "bill" ]
+    [ div
+        [ class' "bill-title" ]
+        [ text (unBillName (billName bill)) ]
+    , div
+        [ class' "position" ]
+        $ billPositionButton vm agenda cm bill <$> [ Support, Neutral, Oppose ]
+    ]
+
+
+billPositionButton :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
+billPositionButton _ _ _ _ _ = div [] []
 
 
 emptyPersonalInfo :: PersonalInfo
