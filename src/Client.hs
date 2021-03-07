@@ -143,7 +143,8 @@ instance Show MonthOfYear where
 
 
 newtype DayOfMonth = DayOfMonth { unDayOfMonth :: Int }
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic)
+  deriving newtype Show
 
 
 getYear :: Day -> Year
@@ -232,7 +233,7 @@ getAgendaButton day =
 
 
 agendaView :: Applicative m => ViewModel -> Html m ViewModel
-agendaView _ = div [] []
+agendaView _ = div [] [] -- TODO
 
 
 emptyPersonalInfo :: PersonalInfo
@@ -337,8 +338,8 @@ app = do
   now <- liftIO getCurrentTime
   let tomorrow = utctDay (addUTCTime nominalDay now)
       initialModel = emptyViewModel tomorrow
-  model <- newTVarIO (emptyViewModel tomorrow)
-  shpadoinkle runUIM runParDiff initialModel model view getBody
+  model <- newTVarIO initialModel
+  shpadoinkle runUIM runParDiff model view getBody
 
 
 dev :: IO ()

@@ -10,6 +10,7 @@ executable server
    , mtl
    , servant
    , servant-server
+   , Shpadoinkle
    , text
    , time
    , transformers
