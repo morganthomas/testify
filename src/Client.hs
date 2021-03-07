@@ -23,7 +23,10 @@ import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Data.Generics.Labels        ()
+import qualified Data.Map                    as Map
 import           Data.Proxy                  (Proxy (Proxy))
+import           Data.Set                    (Set)
+import qualified Data.Set                    as Set
 import           Data.Text                   (Text, pack)
 import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
 import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
@@ -232,7 +235,16 @@ getAgendaButton day =
 
 
 agendaView :: Applicative m => ViewModel -> Html m ViewModel
-agendaView _ = div [] []
+agendaView vm =
+  div [] $
+    case vmAgenda vm of
+      Just (AgendaResult (Right (Agenda agenda))) ->
+        uncurry (committeeView vm) <$> Map.toList agenda
+      _ -> []
+
+
+committeeView :: Applicative m => ViewModel -> Committee -> Set Bill -> Html m ViewModel
+committeeView _ _ _ = div [] []
 
 
 emptyPersonalInfo :: PersonalInfo
