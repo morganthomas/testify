@@ -8,6 +8,7 @@ executable server
    , aeson
    , containers
    , mtl
+   , process
    , servant
    , servant-server
    , Shpadoinkle

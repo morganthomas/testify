@@ -81,9 +81,14 @@ newtype UserAgentString = UserAgentString { unUserAgentString :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
+newtype PhantomjsPath = PhantomjsPath { unPhantomjsPath :: String }
+  deriving (Eq, Read, Show, IsString)
+
+
 data Config
   = Config
     { userAgentString :: UserAgentString
+    , phantomjsPath :: PhantomjsPath
     , houseFormUrl :: HouseFormUrl
     , houseCommitteeSelector :: HouseCommitteeSelector
     , houseCommitteeDropdownSelector :: HouseCommitteeDropdownSelector
@@ -109,10 +114,11 @@ class HasConfig m where
   getConfig :: m Config
 
 
-config :: Config
-config =
+config :: PhantomjsPath -> Config
+config phantomPath =
   Config
   { userAgentString = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36"
+  , phantomjsPath = phantomPath
   , houseFormUrl = "http://gencourt.state.nh.us/house/committees/remotetestimony/default.aspx"
   , houseCommitteeSelector = "select[name=\"ddlCommittee\"] option"
   , houseCommitteeDropdownSelector = "select[name=\"ddlCommittee\"]"
