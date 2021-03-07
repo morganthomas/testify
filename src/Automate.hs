@@ -109,7 +109,7 @@ getHouseCommittees cfg = do
   els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
-  return . filter (\cm -> committeeName cm /= "Select a Committee -->")
+  return . filter (\cm -> committeeName cm /= unHouseSelectCommitteeOption (houseSelectCommitteeOption cfg))
     $ zipWith Committee committeeNames committeeIds
 
 
@@ -125,7 +125,7 @@ getHouseCommitteeBills cfg committee = do
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText
   billIds <- fmap (BillId . fromMaybe "0") <$> forM billEls (\e -> attr e "value")
-  return . filter (\bill -> billName bill /= "Select a Bill -->")
+  return . filter (\bill -> billName bill /= unHouseSelectBillOption (houseSelectBillOption cfg))
     $ zipWith Bill billNames billIds
 
 

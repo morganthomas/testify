@@ -8,6 +8,8 @@ module Config where
 import Data.String (IsString)
 import Data.Text (Text)
 
+import Types
+
 
 newtype HouseFormUrl = HouseFormUrl { unHouseFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
@@ -73,6 +75,14 @@ newtype HouseContinueSelector3 = HouseContinueSelector3 { unHouseContinueSelecto
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseSelectCommitteeOption = HouseSelectCommitteeOption { unHouseSelectCommitteeOption :: CommitteeName }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype HouseSelectBillOption = HouseSelectBillOption { unHouseSelectBillOption :: BillName }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype SenateFormUrl = SenateFormUrl { unSenateFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -105,6 +115,8 @@ data Config
     , houseContinueSelector2 :: HouseContinueSelector2
     , houseAgreeSelector :: HouseAgreeSelector
     , houseContinueSelector3 :: HouseContinueSelector3
+    , houseSelectCommitteeOption :: HouseSelectCommitteeOption
+    , houseSelectBillOption :: HouseSelectBillOption
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -135,5 +147,7 @@ config phantomPath =
   , houseContinueSelector2 = "#btnContinue"
   , houseAgreeSelector = "#chkAgree"
   , houseContinueSelector3 = "#btnContinue"
+  , houseSelectCommitteeOption = "Select a Committee -->"
+  , houseSelectBillOption = "Select a Bill -->"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }
