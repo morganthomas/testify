@@ -48,7 +48,7 @@ instance Monad m => HasConfig (AutomateT m) where
 
 
 browser :: Browser
-browser = Phantomjs (Just "/run/current-system/sw/bin/phantomjs") []
+browser = Phantomjs (Just "/nix/store/afygm6wrkdr2g7g8079kjd3lhz1vlnmx-phantomjs-2.1.1/bin/phantomjs") []
 
 
 sessionConfig :: Config -> WDConfig

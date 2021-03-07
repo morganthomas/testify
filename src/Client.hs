@@ -42,7 +42,7 @@ import           Shpadoinkle                 (shpadoinkle, Html, NFData,
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.Html
 import           Shpadoinkle.Lens            (onRecord)
-import           Shpadoinkle.Router.Client   (ClientM, client, runXHR)
+import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
 import           Shpadoinkle.Run             (live, runJSorWarp)
 import           UnliftIO.Concurrent         (forkIO)
 
@@ -68,9 +68,15 @@ instance MonadUnliftIO UIM where
     c <- askJSM
     return $ UnliftIO $ \(UIM m) -> runJSaddle @IO c m
 
+clientEnv :: ClientEnv
+clientEnv = ClientEnv (BaseUrl Http "localhost" 8008 "")
+
+toUIM :: ClientM a -> UIM a
+toUIM = UIM . flip runXHR' clientEnv
+
 instance TestifyEffects UIM where
-  getAgenda = UIM . runXHR . getAgendaM
-  testify = UIM . runXHR . testifyM
+  getAgenda = toUIM . getAgendaM
+  testify = toUIM . testifyM
 
 instance ( Monad m, MonadTrans t, TestifyEffects m ) => TestifyEffects (t m) where
   getAgenda = lift . getAgenda
@@ -146,7 +152,8 @@ instance Show MonthOfYear where
 
 
 newtype DayOfMonth = DayOfMonth { unDayOfMonth :: Int }
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Generic)
+  deriving newtype Show
 
 
 getYear :: Day -> Year
@@ -219,7 +226,7 @@ dateSelect day =
     [ class' "date-select" ]
     [ liftC setYear  getYear  $ yearSelect (Year y)
     , liftC setMonth getMonth $ monthSelect (MonthOfYear m)
-    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth m)
+    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
     ]
 
 
