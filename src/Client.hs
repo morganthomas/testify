@@ -244,7 +244,11 @@ agendaView vm =
 
 
 committeeView :: Applicative m => ViewModel -> Committee -> Set Bill -> Html m ViewModel
-committeeView _ _ _ = div [] []
+committeeView vm cm bills = div [] $ billView vm cm <$> Set.toList bills
+
+
+billView :: Applicative m => ViewModel -> Committee -> Bill -> Html m ViewModel
+billView _ _ _ = div [] []
 
 
 emptyPersonalInfo :: PersonalInfo
