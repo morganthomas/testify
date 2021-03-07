@@ -257,7 +257,9 @@ agendaView vm =
     case vmAgenda vm of
       Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
         uncurry (committeeView vm agenda) <$> Map.toList agendaMap
-      _ ->
+      Just (AgendaResult (Left err)) ->
+        [ text ("An error has occurred loading the agenda: " <> unErrorMessage err) ]
+      Nothing ->
         case vmIsLoading vm of
           IsLoadingAgenda -> [ text "Loading agenda..." ]
           IsNOTLoadingAgenda -> [ ]

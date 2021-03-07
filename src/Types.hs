@@ -167,7 +167,7 @@ instance ToJSON Submission
 instance FromJSON Submission
 
 
-newtype ErrorMessage = ErrorMessage Text
+newtype ErrorMessage = ErrorMessage { unErrorMessage :: Text }
   deriving (Eq, Show, Read, Generic)
 
 instance NFData ErrorMessage
