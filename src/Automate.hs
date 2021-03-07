@@ -109,7 +109,8 @@ getHouseCommittees cfg = do
   els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
-  return (zipWith Committee committeeNames committeeIds)
+  return . filter (\cm -> committeeName cm /= "Select a Committee -->")
+    $ zipWith Committee committeeNames committeeIds
 
 
 getHouseCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [Bill]
@@ -124,7 +125,8 @@ getHouseCommitteeBills cfg committee = do
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText
   billIds <- fmap (BillId . fromMaybe "0") <$> forM billEls (\e -> attr e "value")
-  return (zipWith Bill billNames billIds)
+  return . filter (\bill -> billName bill /= "Select a Bill -->")
+    $ zipWith Bill billNames billIds
 
 
 committeeSelector :: Config -> Committee -> Selector

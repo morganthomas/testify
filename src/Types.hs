@@ -26,7 +26,7 @@ data Features =
 
 
 newtype BillName = BillName { unBillName :: Text }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
 
 instance NFData BillName
 instance ToJSON BillName
@@ -55,7 +55,7 @@ instance FromJSONKey Bill
 
 
 newtype CommitteeName = CommitteeName { unCommitteeName :: Text }
-  deriving (Eq, Ord, Read, Show, Generic)
+  deriving (Eq, Ord, Read, Show, Generic, IsString)
 
 instance NFData CommitteeName
 instance ToJSON CommitteeName
