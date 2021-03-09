@@ -32,6 +32,7 @@ import qualified Data.Set                    as Set
 import           Data.Text                   (Text, pack)
 import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
 import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
+import           Data.Time.LocalTime         (utcToLocalTime, getCurrentTimeZone, localDay)
 import           GHC.Generics                (Generic)
 import           Language.Javascript.JSaddle (runJSaddle)
 import           Servant.API
@@ -388,7 +389,10 @@ submitButton vm =
     disabledButton =
       button
         [ disabled True ]
-        [ text "Submit" ]
+        [ text $ case vmStatus vm of
+                   SubmissionProcessing -> "Processing..."
+                   _ -> "Submit"
+        ]
 
     enabledButton =
       button
@@ -424,7 +428,8 @@ view model =
 app :: JSM ()
 app = do
   now <- liftIO getCurrentTime
-  let tomorrow = utctDay (addUTCTime nominalDay now)
+  tz  <- liftIO getCurrentTimeZone
+  let tomorrow = localDay (utcToLocalTime tz (addUTCTime nominalDay now))
       initialModel = emptyViewModel tomorrow
   model <- newTVarIO initialModel
   withDeveloperTools model

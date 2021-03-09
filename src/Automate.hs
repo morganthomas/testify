@@ -90,14 +90,22 @@ testifyOnHouseBill cfg day committee bill position person = do
 
 
 wait :: MonadIO m => m ()
-wait = liftIO $ threadDelay 1000000
+wait = liftIO $ threadDelay 500000
+
+
+waitForElem :: MonadIO m => WebDriver m => Selector -> m Element
+waitForElem selector = do
+  els <- findElems selector
+  case els of
+    []   -> wait >> waitForElem selector
+    [el] -> return el
+    _    -> error "element is not unique"
 
 
 getHouseBills :: MonadIO m => WebDriver m => Config -> Day -> m Agenda
 getHouseBills cfg day = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
-  wait
-  dayEl <- findElem (daySelector day)
+  dayEl <- waitForElem (daySelector day)
   click dayEl
   wait
   committees <- getHouseCommittees cfg
@@ -117,8 +125,7 @@ getHouseCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [
 getHouseCommitteeBills cfg committee = do
   select <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
   click select
-  wait
-  option <- findElem $ committeeSelector cfg committee
+  option <- waitForElem $ committeeSelector cfg committee
   click option
   wait
   billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
