@@ -43,6 +43,10 @@ newtype HouseOpposeSelector = HouseOpposeSelector { unHouseOpposeSelector :: Tex
   deriving (Eq, Read, Show, IsString)
 
 
+newtype HouseNeutralSelector = HouseNeutralSelector { unHouseNeutralSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
 newtype HouseContinueSelector = HouseContinueSelector { unHouseContinueSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
@@ -107,6 +111,7 @@ data Config
     , houseIAmOptionSelector :: HouseIAmOptionSelector
     , houseSupportSelector :: HouseSupportSelector
     , houseOpposeSelector :: HouseOpposeSelector
+    , houseNeutralSelector :: HouseNeutralSelector
     , houseContinueSelector :: HouseContinueSelector
     , houseFirstNameSelector :: HouseFirstNameSelector
     , houseLastNameSelector :: HouseLastNameSelector
@@ -139,6 +144,7 @@ config phantomPath =
   , houseIAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
   , houseSupportSelector = "#rdoPosition_0"
   , houseOpposeSelector = "#rdoPosition_1"
+  , houseNeutralSelector = "#rdoPosition_2"
   , houseContinueSelector = "#btnContinue"
   , houseFirstNameSelector = "input[name=\"txtFirstName\"]"
   , houseLastNameSelector = "input[name=\"txtLastName\"]"

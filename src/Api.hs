@@ -21,7 +21,8 @@ import Data.Aeson (Value (String))
 import Data.Proxy
 import Data.Time.Calendar
 import GHC.Generics
-import Network.Wai.Middleware.Cors (CorsResourcePolicy (CorsResourcePolicy), cors)
+import Network.Wai (modifyResponse, mapResponseHeaders)
+import Network.Wai.Middleware.Servant.Options (provideOptions)
 import Servant
 import Test.WebDriver (Browser (..), sessions, runWD, useBrowser, createSession, runSession)
 import Test.WebDriver.Capabilities (Capabilities (additionalCaps), defaultCaps, phantomjs)
@@ -29,21 +30,16 @@ import Test.WebDriver.Config (WDConfig (wdCapabilities), defaultConfig)
 import Test.WebDriver.Session (WDSession)
 
 
-corsPolicy :: CorsResourcePolicy
-corsPolicy =
-  CorsResourcePolicy
-  Nothing
-  ["GET", "POST"]
-  ["accept", "accept-encoding", "cache-control", "connection", "content-length", "content-type", "host", "origin", "pragma", "referer", "sec-fetch-dest", "sec-fetch-mode", "user-agent"]
-  Nothing
-  Nothing
-  False
-  False
-  True
+corsMiddleware :: Application -> Application
+corsMiddleware =
+  modifyResponse . mapResponseHeaders $
+    (("access-control-allow-origin", "*") :)
+  . (("access-control-allow-methods", "GET, POST") :)
+  . (("access-control-allow-headers", "*") :)
 
 
 app :: Config -> IO Application
-app = fmap (cors (const (Just corsPolicy)) . serve api) . server
+app = fmap (corsMiddleware . provideOptions api . serve api) . server
 
 
 api :: Proxy Api

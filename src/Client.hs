@@ -383,7 +383,9 @@ submitButton vm =
     Just (AgendaResult (Right _)) ->
       if null (unPositions (vmPositions vm))
       then disabledButton
-      else enabledButton
+      else if vmStatus vm == HaveNotSubmitted
+           then enabledButton
+           else disabledButton
     _ -> disabledButton
   where
     disabledButton =
@@ -391,6 +393,8 @@ submitButton vm =
         [ disabled True ]
         [ text $ case vmStatus vm of
                    SubmissionProcessing -> "Processing..."
+                   SubmissionSucceeded -> "Success!"
+                   SubmissionFailed err -> "Failure: " <> unErrorMessage err
                    _ -> "Submit"
         ]
 

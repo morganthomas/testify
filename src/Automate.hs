@@ -28,7 +28,7 @@ import Config
 import Types
 
 
-testifyOnHouseBills :: WebDriver m => Config -> Submission -> m ()
+testifyOnHouseBills :: MonadIO m => WebDriver m => Config -> Submission -> m ()
 testifyOnHouseBills cfg subm =
   let posMap :: Map Committee (Map Bill (Maybe Position))
       posMap = unPositions $ positions subm
@@ -50,15 +50,18 @@ testifyOnHouseBills cfg subm =
   in forM_ forms (\(c,bill,pos,person) -> testifyOnHouseBill cfg day c bill pos person)
 
 
-testifyOnHouseBill :: WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()
+testifyOnHouseBill :: MonadIO m => WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()
 testifyOnHouseBill cfg day committee bill position person = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
-  dayEl <- findElem (daySelector day)
+  dayEl <- waitForElem (daySelector day)
   click dayEl
+  wait
   committeeSelect <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
   click committeeSelect
+  wait
   committeeEl <- findElem (committeeSelector cfg committee)
   click committeeEl
+  wait
   billSelect <- findElem . ByCSS . unHouseBillDropdownSelector $ houseBillDropdownSelector cfg
   click billSelect
   billEl <- findElem (billSelector cfg bill)
@@ -70,10 +73,11 @@ testifyOnHouseBill cfg day committee bill position person = do
   posEl <- case position of
              Support -> findElem . ByCSS . unHouseSupportSelector $ houseSupportSelector cfg
              Oppose -> findElem . ByCSS . unHouseOpposeSelector $ houseOpposeSelector cfg
+             Neutral -> findElem . ByCSS . unHouseNeutralSelector $ houseNeutralSelector cfg
   click posEl
   continueEl <- findElem . ByCSS . unHouseContinueSelector $ houseContinueSelector cfg
   click continueEl
-  firstNameEl <- findElem . ByCSS . unHouseFirstNameSelector $ houseFirstNameSelector cfg
+  firstNameEl <- waitForElem . ByCSS . unHouseFirstNameSelector $ houseFirstNameSelector cfg
   sendKeys (unFirstName (firstName person)) firstNameEl
   lastNameEl <- findElem . ByCSS . unHouseLastNameSelector $ houseLastNameSelector cfg
   sendKeys (unLastName (lastName person)) lastNameEl
@@ -83,7 +87,7 @@ testifyOnHouseBill cfg day committee bill position person = do
   sendKeys (unTown (town person)) townEl
   continueEl2 <- findElem . ByCSS . unHouseContinueSelector2 $ houseContinueSelector2 cfg
   click continueEl2
-  agreeEl <- findElem . ByCSS . unHouseAgreeSelector $ houseAgreeSelector cfg
+  agreeEl <- waitForElem . ByCSS . unHouseAgreeSelector $ houseAgreeSelector cfg
   click agreeEl
   continueEl3 <- findElem . ByCSS . unHouseContinueSelector3 $ houseContinueSelector3 cfg
   click continueEl3

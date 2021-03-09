@@ -53,6 +53,7 @@ let
   # Haskell specific overlay (for you to extend)
   haskell-overlay = hself: hsuper: {
     "happy" = pkgs.haskell.lib.dontCheck hsuper.happy;
+    servant-foreign = pkgs.haskell.lib.dontCheck hsuper.servant-foreign;
   };
 
 

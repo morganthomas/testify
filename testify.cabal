@@ -10,13 +10,14 @@ executable server
    , mtl
    , process
    , servant
+   , servant-options
    , servant-server
    , Shpadoinkle
    , text
    , time
    , transformers
    , transformers-base
-   , wai-cors
+   , wai
    , warp
    , webdriver
   hs-source-dirs:      src
