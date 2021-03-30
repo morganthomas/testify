@@ -10,7 +10,7 @@ module Automate
 
 
 import Control.Concurrent (threadDelay)
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -55,8 +55,7 @@ testifyOnHouseBill cfg day committee bill position person = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- waitForElem (daySelector day)
   click dayEl
-  wait
-  committeeSelect <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
+  committeeSelect <- waitForElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
   click committeeSelect
   wait
   committeeEl <- findElem (committeeSelector cfg committee)
@@ -66,16 +65,22 @@ testifyOnHouseBill cfg day committee bill position person = do
   click billSelect
   billEl <- findElem (billSelector cfg bill)
   click billEl
+  wait
   iamSelect <- findElem . ByCSS . unHouseIAmDropdownSelector $ houseIAmDropdownSelector cfg
   click iamSelect
   iamEl <- findElem . ByCSS . unHouseIAmOptionSelector $ houseIAmOptionSelector cfg
   click iamEl
+  wait
   posEl <- case position of
              Support -> findElem . ByCSS . unHouseSupportSelector $ houseSupportSelector cfg
              Oppose -> findElem . ByCSS . unHouseOpposeSelector $ houseOpposeSelector cfg
              Neutral -> findElem . ByCSS . unHouseNeutralSelector $ houseNeutralSelector cfg
   click posEl
+  wait
   continueEl <- findElem . ByCSS . unHouseContinueSelector $ houseContinueSelector cfg
+  continueDisabled <- attr continueEl "disabled"
+  liftIO $ putStrLn (show continueDisabled)
+  when (continueDisabled == Just "disabled") (error "continue is disabled")
   click continueEl
   firstNameEl <- waitForElem . ByCSS . unHouseFirstNameSelector $ houseFirstNameSelector cfg
   sendKeys (unFirstName (firstName person)) firstNameEl
