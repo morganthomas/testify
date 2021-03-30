@@ -26,6 +26,7 @@ import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Data.Generics.Labels        ()
 import qualified Data.Map                    as Map
+import           Data.Maybe                  (fromMaybe)
 import           Data.Proxy                  (Proxy (Proxy))
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
@@ -38,13 +39,15 @@ import           Language.Javascript.JSaddle (runJSaddle)
 import           Servant.API
 import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               forgetC, liftC, voidRunContinuationT,
-                                              pur, impur, commit, merge,
+                                              pur, impur, commit, mapC, before, causes,
+                                              kleisli, merge,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO))
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.DeveloperTools  (withDeveloperTools)
 import           Shpadoinkle.Html
+import           Shpadoinkle.Html.LocalStorage
 import           Shpadoinkle.Lens            (onRecord)
 import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
 import           Shpadoinkle.Run             (live, runJSorWarp)
@@ -129,14 +132,9 @@ data ViewModel =
 
 instance NFData ViewModel
 
-emptyViewModel :: Day -> ViewModel
-emptyViewModel day =
-  ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) initialPersons HaveNotSubmitted
-  where
-    initialPersons =
-      case multiPersonFeature features of
-        MultiPersonFeature -> []
-        NoMultiPersonFeature -> [emptyPersonalInfo]
+initialViewModel :: Day -> [PersonalInfo] -> ViewModel
+initialViewModel day persons =
+  ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) persons HaveNotSubmitted
 
 
 newtype Year = Year { unYear :: Integer }
@@ -363,8 +361,10 @@ addPerson persons =
     [ text "Add Person" ]
 
 
-personsView :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]
+personsView :: MonadJSM m => [PersonalInfo] -> Html m [PersonalInfo]
 personsView persons =
+  mapC (`before` (kleisli $ \persons -> return . causes $ setSavedPersonalInfo persons))
+  $
   case multiPersonFeature features of
     MultiPersonFeature ->
       div
@@ -429,12 +429,32 @@ view model =
     ]
 
 
+initialPersons :: [PersonalInfo]
+initialPersons =
+  case multiPersonFeature features of
+    MultiPersonFeature -> []
+    NoMultiPersonFeature -> [emptyPersonalInfo]
+
+
+storageKey :: LocalStorageKey [PersonalInfo]
+storageKey = LocalStorageKey "testify_personal_info"
+
+
+getSavedPersonalInfo :: MonadJSM m => m (Maybe [PersonalInfo])
+getSavedPersonalInfo = getStorage storageKey
+
+
+setSavedPersonalInfo :: MonadJSM m => [PersonalInfo] -> m ()
+setSavedPersonalInfo = setStorage storageKey
+
+
 app :: JSM ()
 app = do
-  now <- liftIO getCurrentTime
-  tz  <- liftIO getCurrentTimeZone
+  now     <- liftIO getCurrentTime
+  tz      <- liftIO getCurrentTimeZone
+  persons <- fromMaybe initialPersons <$> getSavedPersonalInfo
   let tomorrow = localDay (utcToLocalTime tz (addUTCTime nominalDay now))
-      initialModel = emptyViewModel tomorrow
+      initialModel = initialViewModel tomorrow persons
   model <- newTVarIO initialModel
   withDeveloperTools model
   shpadoinkle runUIM runParDiff model view getBody
