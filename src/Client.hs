@@ -35,7 +35,7 @@ import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
 import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
 import           Data.Time.LocalTime         (utcToLocalTime, getCurrentTimeZone, localDay)
 import           GHC.Generics                (Generic)
-import           Language.Javascript.JSaddle (runJSaddle)
+import           Language.Javascript.JSaddle (runJSaddle, fromJSVal, (!))
 import           Servant.API
 import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               forgetC, liftC, voidRunContinuationT,
@@ -43,7 +43,8 @@ import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               kleisli, merge,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
-                                              askJSM, UnliftIO (UnliftIO))
+                                              askJSM, UnliftIO (UnliftIO),
+                                              RawNode (..))
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.DeveloperTools  (withDeveloperTools)
 import           Shpadoinkle.Html
@@ -139,33 +140,57 @@ initialViewModel day persons =
 
 newtype Year = Year { unYear :: Integer }
   deriving (Eq, Generic)
-  deriving newtype Show
+  deriving newtype (Read, Show)
 
 
-newtype MonthOfYear = MonthOfYear { unMonthOfYear :: Int }
-  deriving (Eq, Generic)
+data MonthOfYear
+  = January
+  | February
+  | March
+  | April
+  | May
+  | June
+  | July
+  | August
+  | September
+  | October
+  | November
+  | December
+  deriving (Eq, Generic, Read, Show)
 
-instance Show MonthOfYear where
-  show (MonthOfYear n) =
-    case n of
-      1  -> "January"
-      2  -> "February"
-      3  -> "March"
-      4  -> "April"
-      5  -> "May"
-      6  -> "June"
-      7  -> "July"
-      8  -> "August"
-      9  -> "September"
-      10 -> "October"
-      11 -> "November"
-      12 -> "December"
-      _  -> "Unknown Month"
+monthToNum :: MonthOfYear -> Int
+monthToNum January   = 1
+monthToNum February  = 2
+monthToNum March     = 3
+monthToNum April     = 4
+monthToNum May       = 5
+monthToNum June      = 6
+monthToNum July      = 7
+monthToNum August    = 8
+monthToNum September = 9
+monthToNum October   = 10
+monthToNum November  = 11
+monthToNum December  = 12
+
+numToMonth :: Int -> MonthOfYear
+numToMonth 1  = January
+numToMonth 2  = February
+numToMonth 3  = March
+numToMonth 4  = April
+numToMonth 5  = May
+numToMonth 6  = June
+numToMonth 7  = July
+numToMonth 8  = August
+numToMonth 9  = September
+numToMonth 10 = October
+numToMonth 11 = November
+numToMonth 12 = December
+numToMonth _  = error "numToMonth unhandled case"
 
 
 newtype DayOfMonth = DayOfMonth { unDayOfMonth :: Int }
   deriving (Eq, Generic)
-  deriving newtype Show
+  deriving newtype (Read, Show)
 
 
 getYear :: Day -> Year
@@ -173,7 +198,7 @@ getYear day = let (y, _, _) = toGregorian day in Year y
 
 
 getMonth :: Day -> MonthOfYear
-getMonth day = let (_, m, _) = toGregorian day in MonthOfYear m
+getMonth day = let (_, m, _) = toGregorian day in numToMonth m
 
 
 getDay :: Day -> DayOfMonth
@@ -185,26 +210,30 @@ setYear (Year y) day = let (_, m, d) = toGregorian day in fromGregorian y m d
 
 
 setMonth :: MonthOfYear -> Day -> Day
-setMonth (MonthOfYear m) day = let (y, _, d) = toGregorian day in fromGregorian y m d
+setMonth m day = let (y, _, d) = toGregorian day in fromGregorian y (monthToNum m) d
 
 
 setDay :: DayOfMonth -> Day -> Day
 setDay (DayOfMonth d) day = let (y, m, _) = toGregorian day in fromGregorian y m d
 
 
-selectFrom :: Applicative m => Eq a => Show a => [a] -> a -> Html m a
+selectFrom :: Applicative m => Eq a => Read a => Show a
+           => [a] -> a -> Html m a
 selectFrom opts oSelected =
-  select []
-  ( (\o ->
-      option
-        [ value (pack (show o))
-        , onClick (const o)
-        , selected (o == oSelected)
-        ]
-        [ text (pack (show o)) ]
+  select
+    [ listenRaw "change" $ \(RawNode n) _ ->
+        pur . const . read . fromMaybe "" <$> (fromJSVal =<< n ! "value")
+    ]
+    ( (\o ->
+        option
+          [ value (pack (show o))
+          , onClick (const o)
+          , selected (o == oSelected)
+          ]
+          [ text (pack (show o)) ]
+      )
+      <$> opts
     )
-    <$> opts
-  )
 
 
 years :: [Year]
@@ -216,7 +245,7 @@ yearSelect = selectFrom years
 
 
 months :: [MonthOfYear]
-months = MonthOfYear <$> [1..12]
+months = numToMonth <$> [1..12]
 
 
 monthSelect :: Applicative m => MonthOfYear -> Html m MonthOfYear
@@ -237,7 +266,7 @@ dateSelect day =
   div
     [ class' "date-select" ]
     [ liftC setYear  getYear  $ yearSelect (Year y)
-    , liftC setMonth getMonth $ monthSelect (MonthOfYear m)
+    , liftC setMonth getMonth $ monthSelect (numToMonth m)
     , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
     ]
 
@@ -247,6 +276,7 @@ getAgendaButton day =
   button
     [ onClickC . voidRunContinuationT $ do
         commit . pur $ #vmIsLoading .~ IsLoadingAgenda
+        commit . pur $ #vmAgenda .~ Nothing
         commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day
         commit . pur $
           \vm ->
@@ -267,7 +297,9 @@ agendaView vm =
   div [] $
     case vmAgenda vm of
       Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
-        uncurry (committeeView vm agenda) <$> Map.toList agendaMap
+        if null agendaMap
+        then [ text "No bills (yay!)" ]
+        else uncurry (committeeView vm agenda) <$> Map.toList agendaMap
       Just (AgendaResult (Left err)) ->
         [ text ("An error has occurred loading the agenda: " <> unErrorMessage err) ]
       Nothing ->
@@ -281,7 +313,9 @@ committeeView vm agenda cm bills = div [] $
     div
       [ class' "committee-header" ]
       [ text (unCommitteeName (committeeName cm)) ]
-  : ( billView vm agenda cm <$> Set.toList bills )
+  : ( if null bills
+      then [ text "No bills for this committee (is this a software error?)" ]
+      else billView vm agenda cm <$> Set.toList bills )
 
 
 billView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Html m ViewModel

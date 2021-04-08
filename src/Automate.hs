@@ -136,7 +136,7 @@ getHouseCommitteeBills cfg committee = do
   click select
   option <- waitForElem $ committeeSelector cfg committee
   click option
-  wait
+  _ <- waitForElem . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg) <> " option[selected=\"selected\"]"
   billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText
