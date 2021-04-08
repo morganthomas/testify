@@ -10,6 +10,7 @@
 , asShell ? false
 , system ? builtins.currentSystem
 , optimize ? true
+, docker ? false
 }:
 let
 
@@ -93,6 +94,8 @@ let
 
   selenium-server-standalone-jar = builtins.fetchurl { url = "https://selenium-release.storage.googleapis.com/2.53/selenium-server-standalone-2.53.1.jar"; };
 
+  testify-build = (if isJS && optimize then doCannibalize else x: x) (chill testify);
+
 
 in with pkgs; with lib;
 
@@ -107,4 +110,10 @@ in with pkgs; with lib;
       cat ${./intro}
       java -jar selenium-server-standalone-2.53.1.jar &
     '';
-  } else (if isJS && optimize then doCannibalize else x: x) (chill testify)
+  }
+  else if docker
+  then import ./docker-image.nix { inherit pkgs;
+                                   selenium-server-standalone-jar = ./selenium-server-standalone-2.53.1.jar;
+                                   testify = testify-build;
+                                   jre = pkgs.jre; }
+  else testify-build
