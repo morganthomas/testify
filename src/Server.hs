@@ -24,4 +24,6 @@ instance HasConfig IO where
 
 
 main :: IO ()
-main = run 8008 =<< app =<< getConfig
+main = do
+  putStrLn "starting server on port 8008"
+  run 8008 =<< app =<< getConfig
