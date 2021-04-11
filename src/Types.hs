@@ -15,6 +15,14 @@ import GHC.Generics (Generic)
 import Shpadoinkle (NFData)
 
 
+data Chamber = House | Senate
+  deriving (Eq, Ord, Show, Read, Generic)
+
+instance NFData Chamber
+instance ToJSON Chamber
+instance FromJSON Chamber
+
+
 data MultiPersonFeature = MultiPersonFeature | NoMultiPersonFeature
   deriving (Eq, Ord, Show, Read, Generic)
 

@@ -125,6 +125,7 @@ instance NFData SubmissionStatus
 data ViewModel =
   ViewModel
   { vmDay       :: Day
+  , vmChamber   :: Chamber
   , vmIsLoading :: IsLoadingAgenda
   , vmAgenda    :: Maybe AgendaResult
   , vmPositions :: Positions
@@ -137,7 +138,7 @@ instance NFData ViewModel
 
 initialViewModel :: Day -> [PersonalInfo] -> ViewModel
 initialViewModel day persons =
-  ViewModel day IsNOTLoadingAgenda Nothing (Positions mempty) persons HaveNotSubmitted
+  ViewModel day House IsNOTLoadingAgenda Nothing (Positions mempty) persons HaveNotSubmitted
 
 
 newtype Year = Year { unYear :: Integer }
@@ -277,6 +278,36 @@ dateSelect day =
       , liftC setMonth getMonth $ monthSelect (numToMonth m)
       , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
       ]
+    ]
+
+
+chamberSelect :: Chamber -> Html m Chamber
+chamberSelect chamber =
+  div
+    [ class' "m-2" ]
+    [ span
+        [ class' "m-1 font-semibold" ]
+        [ text "Select Chamber" ]
+    , div
+        [ class' "m-1" ]
+        [ chamberOption House chamber
+        , chamberOption Senate chamber ]
+    ]
+
+
+chamberOption :: Chamber -> Chamber -> Html m Chamber
+chamberOption opt chosen =
+  span
+    [ class' "mr-2" ]
+    [ text (pack (show opt))
+    , input
+        [ class' "mx-2"
+        , ("type", "radio")
+        , name' "chamber"
+        , checked (opt == chosen)
+        , onClick (const opt)
+        ]
+        []
     ]
 
 
@@ -489,6 +520,7 @@ view model =
         , text " provided by the State of New Hampshire."
         ]
     , onRecord #vmDay $ dateSelect (vmDay model)
+    , onRecord #vmChamber $ chamberSelect (vmChamber model)
     , getAgendaButton (vmDay model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
