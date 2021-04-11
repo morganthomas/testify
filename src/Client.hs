@@ -307,7 +307,7 @@ getAgendaButton day =
 
 agendaView :: Applicative m => ViewModel -> Html m ViewModel
 agendaView vm =
-  div [] $
+  div [ class' "m-2" ] $
     case vmAgenda vm of
       Just (AgendaResult (Right agenda@(Agenda agendaMap))) ->
         if null agendaMap
@@ -324,7 +324,7 @@ agendaView vm =
 committeeView :: Applicative m => ViewModel -> Agenda -> Committee -> Set Bill -> Html m ViewModel
 committeeView vm agenda cm bills = div [] $
     div
-      [ class' "committee-header" ]
+      [ class' "mb-2 font-semibold" ]
       [ text (unCommitteeName (committeeName cm)) ]
   : ( if null bills
       then [ text "No bills for this committee (is this a software error?)" ]
@@ -334,12 +334,10 @@ committeeView vm agenda cm bills = div [] $
 billView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Html m ViewModel
 billView vm agenda cm bill =
   div
-    [ class' "bill" ]
-    [ div
-        [ class' "bill-title" ]
+    [ class' "mb-2" ]
+    [ div [ ]
         [ text (unBillName (billName bill)) ]
-    , div
-        [ class' "bill-positions" ]
+    , div [ ]
         $ billPositionView vm agenda cm bill <$> [ Support, Neutral, Oppose ]
     ]
 
@@ -347,10 +345,11 @@ billView vm agenda cm bill =
 billPositionView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
 billPositionView _vm _agenda cm bill pos =
   span
-    [ class' "bill-position" ]
+    [ class' "mr-2" ]
     [ text (pack (show pos))
     , input
-        [ ("type", "radio")
+        [ class' "mx-2"
+        , ("type", "radio")
         , name' (unBillId (billId bill))
         , onClick $ #vmPositions . #unPositions . at cm . _Just . at bill . _Just .~ Just pos
         ]
