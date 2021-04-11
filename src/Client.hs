@@ -67,7 +67,7 @@ features = Features NoMultiPersonFeature
 
 
 class TestifyEffects m where
-  getAgenda :: Day -> m AgendaResult
+  getAgenda :: Day -> Chamber -> m AgendaResult
   testify :: Submission -> m TestifyResult
 
 
@@ -89,15 +89,15 @@ toUIM :: ClientM a -> UIM a
 toUIM = UIM . flip runXHR' clientEnv
 
 instance TestifyEffects UIM where
-  getAgenda = toUIM . getAgendaM
+  getAgenda c d = toUIM $ getAgendaM c d
   testify = toUIM . testifyM
 
 instance ( Monad m, MonadTrans t, TestifyEffects m ) => TestifyEffects (t m) where
-  getAgenda = lift . getAgenda
+  getAgenda c d = lift $ getAgenda c d
   testify = lift . testify
 
 
-getAgendaM :: Day -> ClientM AgendaResult
+getAgendaM :: Day -> Chamber -> ClientM AgendaResult
 testifyM :: Submission -> ClientM TestifyResult
 getAgendaM :<|> testifyM = client (Proxy @Api)
 
@@ -315,13 +315,13 @@ btnCls :: Text
 btnCls = "border-solid border-black border-2 rounded p-2 m-2 font-semibold"
 
 
-getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m ViewModel
-getAgendaButton day =
+getAgendaButton :: Monad m => TestifyEffects m => Day -> Chamber -> Html m ViewModel
+getAgendaButton day chamber =
   button
     [ onClickC . voidRunContinuationT $ do
         commit . pur $ #vmIsLoading .~ IsLoadingAgenda
         commit . pur $ #vmAgenda .~ Nothing
-        commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day
+        commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day chamber
         commit . pur $
           \vm ->
             case vmAgenda vm of
@@ -495,7 +495,7 @@ submitButton vm =
     toStatus (TestifyResult (Left err)) = SubmissionFailed err
     toStatus (TestifyResult (Right Success)) = SubmissionSucceeded
 
-    submission = Submission (vmPositions vm) (vmPersons vm) (vmDay vm)
+    submission = Submission (vmChamber vm) (vmPositions vm) (vmPersons vm) (vmDay vm)
 
 
 statusView :: Applicative m => SubmissionStatus -> Html m ()
@@ -521,7 +521,7 @@ view model =
         ]
     , onRecord #vmDay $ dateSelect (vmDay model)
     , onRecord #vmChamber $ chamberSelect (vmChamber model)
-    , getAgendaButton (vmDay model)
+    , getAgendaButton (vmDay model) (vmChamber model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
     , submitButton model

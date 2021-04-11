@@ -14,7 +14,7 @@ import Types
 type Api = AgendaApi :<|> TestifyApi
 
 
-type AgendaApi = "agenda" :> Capture "day" Day :> Get '[JSON] AgendaResult
+type AgendaApi = "agenda" :> Capture "day" Day :> Capture "chamber" Chamber :> Get '[JSON] AgendaResult
 
 
 type TestifyApi = "testify" :> ReqBody '[JSON] Submission :> Post '[JSON] TestifyResult

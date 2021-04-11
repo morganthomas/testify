@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 
 module Types where
@@ -9,9 +10,10 @@ import Data.Aeson (ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 import Data.Map (Map)
 import Data.Set (Set)
 import Data.String (IsString)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Time.Calendar (Day)
 import GHC.Generics (Generic)
+import Servant.API (ToHttpApiData (..), FromHttpApiData (..))
 import Shpadoinkle (NFData)
 
 
@@ -21,6 +23,14 @@ data Chamber = House | Senate
 instance NFData Chamber
 instance ToJSON Chamber
 instance FromJSON Chamber
+
+instance ToHttpApiData Chamber where
+  toUrlPiece = pack . show
+
+instance FromHttpApiData Chamber where
+  parseUrlPiece "House" = pure House
+  parseUrlPiece "Senate" = pure Senate
+  parseUrlPiece x = Left ("Unknown chamber: " <> x)
 
 
 data MultiPersonFeature = MultiPersonFeature | NoMultiPersonFeature
@@ -164,9 +174,10 @@ instance FromJSON PersonalInfo
 
 data Submission
   = Submission
-    { positions      :: Positions
-    , persons        :: [PersonalInfo]
-    , submissionDate :: Day
+    { submissionChamber :: Chamber
+    , positions         :: Positions
+    , persons           :: [PersonalInfo]
+    , submissionDate    :: Day
     }
   deriving (Eq, Show, Read, Generic)
 

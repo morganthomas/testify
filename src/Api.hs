@@ -88,10 +88,10 @@ server' = getAgendaHandler :<|> testifyHandler
 
 
 getAgendaHandler :: HasConfig m => MonadIO m
-                 => Day -> m AgendaResult
-getAgendaHandler day = do
+                 => Day -> Chamber -> m AgendaResult
+getAgendaHandler day chamber = do
   cfg <- getConfig
-  liftIO $ AgendaResult . Right <$> runSession (sessionConfig cfg) (getHouseBills cfg day)
+  liftIO $ AgendaResult . Right <$> runSession (sessionConfig cfg) (getBills cfg day chamber)
 
 
 testifyHandler :: HasConfig m => MonadIO m
@@ -99,4 +99,4 @@ testifyHandler :: HasConfig m => MonadIO m
 testifyHandler subm = do
   cfg <- getConfig
   liftIO $ TestifyResult (Right Success)
-    <$ runSession (sessionConfig cfg) (testifyOnHouseBills cfg subm)
+    <$ runSession (sessionConfig cfg) (testifyOnBills cfg subm)

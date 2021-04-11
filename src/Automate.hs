@@ -4,8 +4,8 @@
 
 
 module Automate 
-  ( getHouseBills
-  , testifyOnHouseBills
+  ( getBills
+  , testifyOnBills
   ) where
 
 
@@ -28,8 +28,8 @@ import Config
 import Types
 
 
-testifyOnHouseBills :: MonadIO m => WebDriver m => Config -> Submission -> m ()
-testifyOnHouseBills cfg subm =
+testifyOnBills :: MonadIO m => WebDriver m => Config -> Submission -> m ()
+testifyOnBills cfg subm =
   let posMap :: Map Committee (Map Bill (Maybe Position))
       posMap = unPositions $ positions subm
 
@@ -39,6 +39,9 @@ testifyOnHouseBills cfg subm =
       day :: Day
       day = submissionDate subm
 
+      chamber :: Chamber
+      chamber = submissionChamber subm
+
       forms :: [(Committee, Bill, Position, PersonalInfo)]
       forms = do
         (c, bills) <- Map.toList posMap
@@ -47,12 +50,17 @@ testifyOnHouseBills cfg subm =
         person <- people
         return (c, bill, pos, person)
 
-  in forM_ forms (\(c,bill,pos,person) -> testifyOnHouseBill cfg day c bill pos person)
+  in forM_ forms (\(c,bill,pos,person) -> testifyOnBill cfg day chamber c bill pos person)
 
 
-testifyOnHouseBill :: MonadIO m => WebDriver m => Config -> Day -> Committee -> Bill -> Position -> PersonalInfo -> m ()
-testifyOnHouseBill cfg day committee bill position person = do
-  openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
+getFormUrl :: Config -> Chamber -> Text
+getFormUrl cfg House = unHouseFormUrl (houseFormUrl cfg)
+getFormUrl cfg Senate = unSenateFormUrl (senateFormUrl cfg)
+
+
+testifyOnBill :: MonadIO m => WebDriver m => Config -> Day -> Chamber -> Committee -> Bill -> Position -> PersonalInfo -> m ()
+testifyOnBill cfg day chamber committee bill position person = do
+  openPage (unpack (getFormUrl cfg chamber))
   dayEl <- waitForElem (daySelector day)
   click dayEl
   committeeSelect <- waitForElem . ByCSS . unCommitteeDropdownSelector $ committeeDropdownSelector cfg
@@ -88,8 +96,11 @@ testifyOnHouseBill cfg day committee bill position person = do
   sendKeys (unLastName (lastName person)) lastNameEl
   emailEl <- findElem . ByCSS . unEmailSelector $ emailSelector cfg
   sendKeys (unEmail (email person)) emailEl
-  townEl <- findElem . ByCSS . unHouseTownSelector $ houseTownSelector cfg
-  sendKeys (unTown (town person)) townEl
+  case chamber of
+    Senate -> return ()
+    House -> do
+      townEl <- findElem . ByCSS . unHouseTownSelector $ houseTownSelector cfg
+      sendKeys (unTown (town person)) townEl
   continueEl2 <- findElem . ByCSS . unContinueSelector2 $ continueSelector2 cfg
   click continueEl2
   agreeEl <- waitForElem . ByCSS . unAgreeSelector $ agreeSelector cfg
@@ -111,18 +122,18 @@ waitForElem selector = do
     _    -> error "element is not unique"
 
 
-getHouseBills :: MonadIO m => WebDriver m => Config -> Day -> m Agenda
-getHouseBills cfg day = do
-  openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
+getBills :: MonadIO m => WebDriver m => Config -> Day -> Chamber -> m Agenda
+getBills cfg day chamber = do
+  openPage (unpack (getFormUrl cfg chamber))
   dayEl <- waitForElem (daySelector day)
   click dayEl
   wait
-  committees <- getHouseCommittees cfg
-  Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getHouseCommitteeBills cfg c)
+  committees <- getCommittees cfg
+  Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getCommitteeBills cfg c)
 
 
-getHouseCommittees :: MonadIO m => WebDriver m => Config -> m [Committee]
-getHouseCommittees cfg = do
+getCommittees :: MonadIO m => WebDriver m => Config -> m [Committee]
+getCommittees cfg = do
   els <- findElems . ByCSS . unCommitteeSelector $ committeeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
@@ -130,8 +141,8 @@ getHouseCommittees cfg = do
     $ zipWith Committee committeeNames committeeIds
 
 
-getHouseCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [Bill]
-getHouseCommitteeBills cfg committee = do
+getCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [Bill]
+getCommitteeBills cfg committee = do
   select <- findElem . ByCSS . unCommitteeDropdownSelector $ committeeDropdownSelector cfg
   click select
   option <- waitForElem $ getCommitteeSelector cfg committee
