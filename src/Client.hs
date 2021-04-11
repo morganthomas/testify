@@ -280,7 +280,7 @@ dateSelect day =
 
 
 btnCls :: Text
-btnCls = "border-solid border-black border-2 rounded p-1 m-2 font-semibold"
+btnCls = "border-solid border-black border-2 rounded p-2 m-2 font-semibold"
 
 
 getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m ViewModel
@@ -482,6 +482,17 @@ view model =
     , onRecord #vmPersons $ personsView (vmPersons model)
     , submitButton model
     , forgetC $ statusView (vmStatus model)
+    , div
+        [ class' "m-2" ]
+        [ text "Please report any issues with this tool to "
+        , a [ href "mailto:morgan.thomas@platonic.systems"
+            , class' "text-blue-700" ]
+            [ "Morgan Thomas <morgan.thomas@platonic.systems>" ]
+        , text "."
+        ]
+    , div
+        [ class' "m-2" ]
+        [ text "Thank you for participating in the political process." ]
     ]
 
 
