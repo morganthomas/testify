@@ -55,6 +55,7 @@ import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (Ba
 import           Shpadoinkle.Run             (live, runJSorWarp)
 import           UnliftIO.Concurrent         (forkIO)
 
+import           Config
 import           Types
 import           Types.Api
 
@@ -473,9 +474,20 @@ statusView _ = div [] []
 view :: Effects m => ViewModel -> Html m ViewModel
 view model =
   div [ ]
-    [ span
+    [ div
         [ class' "m-3 p-2 font-bold text-lg border-b-2 border-black" ]
         [ text "New Hampshire Bill Sign In Tool" ]
+    , div
+        [ class' "m-3" ]
+        [ text "This tool allows you to record your positions on bills for the current New Hampshire legislative session." ]
+    , div
+        [ class' "m-3" ]
+        [ text "It is a more streamlined way of using the "
+        , a [ class' hrefCls, href (unHouseFormUrl (houseFormUrl cfg)) ] [ text "House sign in form" ]
+        , text " and the "
+        , a [ class' hrefCls, href (unSenateFormUrl (senateFormUrl cfg)) ] [ text "Senate sign in form" ]
+        , text " provided by the State of New Hampshire."
+        ]
     , onRecord #vmDay $ dateSelect (vmDay model)
     , getAgendaButton (vmDay model)
     , agendaView model
@@ -486,7 +498,7 @@ view model =
         [ class' "m-2" ]
         [ text "Please report any issues with this tool to "
         , a [ href "mailto:morgan.thomas@platonic.systems"
-            , class' "text-blue-700" ]
+            , class' hrefCls ]
             [ "Morgan Thomas <morgan.thomas@platonic.systems>" ]
         , text "."
         ]
@@ -494,6 +506,10 @@ view model =
         [ class' "m-2" ]
         [ text "Thank you for participating in the political process." ]
     ]
+
+   where
+     cfg = config (error "no phantomjs path on client")
+     hrefCls = "text-blue-700"
 
 
 initialPersons :: [PersonalInfo]
