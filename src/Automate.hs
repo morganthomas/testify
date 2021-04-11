@@ -55,46 +55,46 @@ testifyOnHouseBill cfg day committee bill position person = do
   openPage (unpack (unHouseFormUrl (houseFormUrl cfg)))
   dayEl <- waitForElem (daySelector day)
   click dayEl
-  committeeSelect <- waitForElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
+  committeeSelect <- waitForElem . ByCSS . unCommitteeDropdownSelector $ committeeDropdownSelector cfg
   click committeeSelect
   wait
-  committeeEl <- findElem (committeeSelector cfg committee)
+  committeeEl <- findElem (getCommitteeSelector cfg committee)
   click committeeEl
   wait
-  billSelect <- findElem . ByCSS . unHouseBillDropdownSelector $ houseBillDropdownSelector cfg
+  billSelect <- findElem . ByCSS . unBillDropdownSelector $ billDropdownSelector cfg
   click billSelect
   billEl <- findElem (billSelector cfg bill)
   click billEl
   wait
-  iamSelect <- findElem . ByCSS . unHouseIAmDropdownSelector $ houseIAmDropdownSelector cfg
+  iamSelect <- findElem . ByCSS . unIAmDropdownSelector $ iAmDropdownSelector cfg
   click iamSelect
-  iamEl <- findElem . ByCSS . unHouseIAmOptionSelector $ houseIAmOptionSelector cfg
+  iamEl <- findElem . ByCSS . unIAmOptionSelector $ iAmOptionSelector cfg
   click iamEl
   wait
   posEl <- case position of
-             Support -> findElem . ByCSS . unHouseSupportSelector $ houseSupportSelector cfg
-             Oppose -> findElem . ByCSS . unHouseOpposeSelector $ houseOpposeSelector cfg
-             Neutral -> findElem . ByCSS . unHouseNeutralSelector $ houseNeutralSelector cfg
+             Support -> findElem . ByCSS . unSupportSelector $ supportSelector cfg
+             Oppose -> findElem . ByCSS . unOpposeSelector $ opposeSelector cfg
+             Neutral -> findElem . ByCSS . unNeutralSelector $ neutralSelector cfg
   click posEl
   wait
-  continueEl <- findElem . ByCSS . unHouseContinueSelector $ houseContinueSelector cfg
+  continueEl <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
   continueDisabled <- attr continueEl "disabled"
   liftIO $ putStrLn (show continueDisabled)
   when (continueDisabled == Just "disabled") (error "continue is disabled")
   click continueEl
-  firstNameEl <- waitForElem . ByCSS . unHouseFirstNameSelector $ houseFirstNameSelector cfg
+  firstNameEl <- waitForElem . ByCSS . unFirstNameSelector $ firstNameSelector cfg
   sendKeys (unFirstName (firstName person)) firstNameEl
-  lastNameEl <- findElem . ByCSS . unHouseLastNameSelector $ houseLastNameSelector cfg
+  lastNameEl <- findElem . ByCSS . unLastNameSelector $ lastNameSelector cfg
   sendKeys (unLastName (lastName person)) lastNameEl
-  emailEl <- findElem . ByCSS . unHouseEmailSelector $ houseEmailSelector cfg
+  emailEl <- findElem . ByCSS . unEmailSelector $ emailSelector cfg
   sendKeys (unEmail (email person)) emailEl
   townEl <- findElem . ByCSS . unHouseTownSelector $ houseTownSelector cfg
   sendKeys (unTown (town person)) townEl
-  continueEl2 <- findElem . ByCSS . unHouseContinueSelector2 $ houseContinueSelector2 cfg
+  continueEl2 <- findElem . ByCSS . unContinueSelector2 $ continueSelector2 cfg
   click continueEl2
-  agreeEl <- waitForElem . ByCSS . unHouseAgreeSelector $ houseAgreeSelector cfg
+  agreeEl <- waitForElem . ByCSS . unAgreeSelector $ agreeSelector cfg
   click agreeEl
-  continueEl3 <- findElem . ByCSS . unHouseContinueSelector3 $ houseContinueSelector3 cfg
+  continueEl3 <- findElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
   click continueEl3
 
 
@@ -123,35 +123,35 @@ getHouseBills cfg day = do
 
 getHouseCommittees :: MonadIO m => WebDriver m => Config -> m [Committee]
 getHouseCommittees cfg = do
-  els <- findElems . ByCSS . unHouseCommitteeSelector $ houseCommitteeSelector cfg
+  els <- findElems . ByCSS . unCommitteeSelector $ committeeSelector cfg
   committeeNames <- fmap CommitteeName <$> forM els getText
   committeeIds <- fmap (CommitteeId . fromMaybe "0") <$> forM els (\el -> attr el "value")
-  return . filter (\cm -> committeeName cm /= unHouseSelectCommitteeOption (houseSelectCommitteeOption cfg))
+  return . filter (\cm -> committeeName cm /= unSelectCommitteeOption (selectCommitteeOption cfg))
     $ zipWith Committee committeeNames committeeIds
 
 
 getHouseCommitteeBills :: MonadIO m => WebDriver m => Config -> Committee -> m [Bill]
 getHouseCommitteeBills cfg committee = do
-  select <- findElem . ByCSS . unHouseCommitteeDropdownSelector $ houseCommitteeDropdownSelector cfg
+  select <- findElem . ByCSS . unCommitteeDropdownSelector $ committeeDropdownSelector cfg
   click select
-  option <- waitForElem $ committeeSelector cfg committee
+  option <- waitForElem $ getCommitteeSelector cfg committee
   click option
-  _ <- waitForElem . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg) <> " option[selected=\"selected\"]"
-  billEls <- findElems . ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
+  _ <- waitForElem . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg) <> " option[selected=\"selected\"]"
+  billEls <- findElems . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg)
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText
   billIds <- fmap (BillId . fromMaybe "0") <$> forM billEls (\e -> attr e "value")
-  return . filter (\bill -> billName bill /= unHouseSelectBillOption (houseSelectBillOption cfg))
+  return . filter (\bill -> billName bill /= unSelectBillOption (selectBillOption cfg))
     $ zipWith Bill billNames billIds
 
 
-committeeSelector :: Config -> Committee -> Selector
-committeeSelector cfg committee = ByCSS $ unHouseCommitteeDropdownSelector (houseCommitteeDropdownSelector cfg)
+getCommitteeSelector :: Config -> Committee -> Selector
+getCommitteeSelector cfg committee = ByCSS $ unCommitteeDropdownSelector (committeeDropdownSelector cfg)
                                        <> " option[value=" <> pack (show (unCommitteeId (committeeId committee))) <> "]"
 
 
 billSelector :: Config -> Bill -> Selector
-billSelector cfg bill = ByCSS $ unHouseBillDropdownSelector (houseBillDropdownSelector cfg)
+billSelector cfg bill = ByCSS $ unBillDropdownSelector (billDropdownSelector cfg)
                              <> " option[value=" <> pack (show (unBillId (billId bill))) <> "]"
 
 

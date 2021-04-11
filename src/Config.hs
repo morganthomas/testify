@@ -15,51 +15,51 @@ newtype HouseFormUrl = HouseFormUrl { unHouseFormUrl :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseCommitteeSelector = HouseCommitteeSelector { unHouseCommitteeSelector :: Text }
+newtype CommitteeSelector = CommitteeSelector { unCommitteeSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseCommitteeDropdownSelector = HouseCommitteeDropdownSelector { unHouseCommitteeDropdownSelector :: Text }
+newtype CommitteeDropdownSelector = CommitteeDropdownSelector { unCommitteeDropdownSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseBillDropdownSelector = HouseBillDropdownSelector { unHouseBillDropdownSelector :: Text }
+newtype BillDropdownSelector = BillDropdownSelector { unBillDropdownSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseIAmDropdownSelector = HouseIAmDropdownSelector { unHouseIAmDropdownSelector :: Text }
+newtype IAmDropdownSelector = IAmDropdownSelector { unIAmDropdownSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseIAmOptionSelector = HouseIAmOptionSelector { unHouseIAmOptionSelector :: Text }
+newtype IAmOptionSelector = IAmOptionSelector { unIAmOptionSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseSupportSelector = HouseSupportSelector { unHouseSupportSelector :: Text }
+newtype SupportSelector = SupportSelector { unSupportSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseOpposeSelector = HouseOpposeSelector { unHouseOpposeSelector :: Text }
+newtype OpposeSelector = OpposeSelector { unOpposeSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseNeutralSelector = HouseNeutralSelector { unHouseNeutralSelector :: Text }
+newtype NeutralSelector = NeutralSelector { unNeutralSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseContinueSelector = HouseContinueSelector { unHouseContinueSelector :: Text }
+newtype ContinueSelector = ContinueSelector { unContinueSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseFirstNameSelector = HouseFirstNameSelector { unHouseFirstNameSelector :: Text }
+newtype FirstNameSelector = FirstNameSelector { unFirstNameSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseLastNameSelector = HouseLastNameSelector { unHouseLastNameSelector :: Text }
+newtype LastNameSelector = LastNameSelector { unLastNameSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseEmailSelector = HouseEmailSelector { unHouseEmailSelector :: Text }
+newtype EmailSelector = EmailSelector { unEmailSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
@@ -67,23 +67,23 @@ newtype HouseTownSelector = HouseTownSelector { unHouseTownSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseContinueSelector2 = HouseContinueSelector2 { unHouseContinueSelector2 :: Text }
+newtype ContinueSelector2 = ContinueSelector2 { unContinueSelector2 :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseAgreeSelector = HouseAgreeSelector { unHouseAgreeSelector :: Text }
+newtype AgreeSelector = AgreeSelector { unAgreeSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseContinueSelector3 = HouseContinueSelector3 { unHouseContinueSelector3 :: Text }
+newtype ContinueSelector3 = ContinueSelector3 { unContinueSelector3 :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseSelectCommitteeOption = HouseSelectCommitteeOption { unHouseSelectCommitteeOption :: CommitteeName }
+newtype SelectCommitteeOption = SelectCommitteeOption { unSelectCommitteeOption :: CommitteeName }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseSelectBillOption = HouseSelectBillOption { unHouseSelectBillOption :: BillName }
+newtype SelectBillOption = SelectBillOption { unSelectBillOption :: BillName }
   deriving (Eq, Read, Show, IsString)
 
 
@@ -104,24 +104,24 @@ data Config
     { userAgentString :: UserAgentString
     , phantomjsPath :: PhantomjsPath
     , houseFormUrl :: HouseFormUrl
-    , houseCommitteeSelector :: HouseCommitteeSelector
-    , houseCommitteeDropdownSelector :: HouseCommitteeDropdownSelector
-    , houseBillDropdownSelector :: HouseBillDropdownSelector
-    , houseIAmDropdownSelector :: HouseIAmDropdownSelector
-    , houseIAmOptionSelector :: HouseIAmOptionSelector
-    , houseSupportSelector :: HouseSupportSelector
-    , houseOpposeSelector :: HouseOpposeSelector
-    , houseNeutralSelector :: HouseNeutralSelector
-    , houseContinueSelector :: HouseContinueSelector
-    , houseFirstNameSelector :: HouseFirstNameSelector
-    , houseLastNameSelector :: HouseLastNameSelector
-    , houseEmailSelector :: HouseEmailSelector
+    , committeeSelector :: CommitteeSelector
+    , committeeDropdownSelector :: CommitteeDropdownSelector
+    , billDropdownSelector :: BillDropdownSelector
+    , iAmDropdownSelector :: IAmDropdownSelector
+    , iAmOptionSelector :: IAmOptionSelector
+    , supportSelector :: SupportSelector
+    , opposeSelector :: OpposeSelector
+    , neutralSelector :: NeutralSelector
+    , continueSelector :: ContinueSelector
+    , firstNameSelector :: FirstNameSelector
+    , lastNameSelector :: LastNameSelector
+    , emailSelector :: EmailSelector
     , houseTownSelector :: HouseTownSelector
-    , houseContinueSelector2 :: HouseContinueSelector2
-    , houseAgreeSelector :: HouseAgreeSelector
-    , houseContinueSelector3 :: HouseContinueSelector3
-    , houseSelectCommitteeOption :: HouseSelectCommitteeOption
-    , houseSelectBillOption :: HouseSelectBillOption
+    , continueSelector2 :: ContinueSelector2
+    , agreeSelector :: AgreeSelector
+    , continueSelector3 :: ContinueSelector3
+    , selectCommitteeOption :: SelectCommitteeOption
+    , selectBillOption :: SelectBillOption
     , senateFormUrl :: SenateFormUrl
     }
   deriving (Eq, Read, Show)
@@ -137,23 +137,23 @@ config phantomPath =
   { userAgentString = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36"
   , phantomjsPath = phantomPath
   , houseFormUrl = "http://gencourt.state.nh.us/house/committees/remotetestimony/default.aspx"
-  , houseCommitteeSelector = "select[name=\"ddlCommittee\"] option"
-  , houseCommitteeDropdownSelector = "select[name=\"ddlCommittee\"]"
-  , houseBillDropdownSelector = "select[name=\"ddlBills\"]"
-  , houseIAmDropdownSelector = "select[name=\"ddlWho\"]"
-  , houseIAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
-  , houseSupportSelector = "#rdoPosition_0"
-  , houseOpposeSelector = "#rdoPosition_1"
-  , houseNeutralSelector = "#rdoPosition_2"
-  , houseContinueSelector = "#btnContinue"
-  , houseFirstNameSelector = "#txtFirstName"
-  , houseLastNameSelector = "#txtLastName"
-  , houseEmailSelector = "#txtEmail"
+  , committeeSelector = "select[name=\"ddlCommittee\"] option"
+  , committeeDropdownSelector = "select[name=\"ddlCommittee\"]"
+  , billDropdownSelector = "select[name=\"ddlBills\"]"
+  , iAmDropdownSelector = "select[name=\"ddlWho\"]"
+  , iAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
+  , supportSelector = "#rdoPosition_0"
+  , opposeSelector = "#rdoPosition_1"
+  , neutralSelector = "#rdoPosition_2"
+  , continueSelector = "#btnContinue"
+  , firstNameSelector = "#txtFirstName"
+  , lastNameSelector = "#txtLastName"
+  , emailSelector = "#txtEmail"
   , houseTownSelector = "#txtTown"
-  , houseContinueSelector2 = "#btnContinue"
-  , houseAgreeSelector = "#chkAgree"
-  , houseContinueSelector3 = "#btnContinue"
-  , houseSelectCommitteeOption = "Select a Committee -->"
-  , houseSelectBillOption = "Select a Bill -->"
+  , continueSelector2 = "#btnContinue"
+  , agreeSelector = "#chkAgree"
+  , continueSelector3 = "#btnContinue"
+  , selectCommitteeOption = "Select a Committee -->"
+  , selectBillOption = "Select a Bill -->"
   , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
   }
