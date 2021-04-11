@@ -21,12 +21,13 @@ import           Prelude                     hiding (div, span)
 import           Control.Concurrent.STM.TVar.Lifted (modifyTVarIO)
 import           Control.Lens                (Lens', (.~), (^.), at)
 import           Control.Lens.Prism          (_Just)
+import           Control.Monad               (guard, join)
 import           Control.Monad.Catch         (MonadThrow, MonadCatch)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Data.Generics.Labels        ()
 import qualified Data.Map                    as Map
-import           Data.Maybe                  (fromMaybe)
+import           Data.Maybe                  (fromMaybe, isJust)
 import           Data.Proxy                  (Proxy (Proxy))
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
@@ -40,7 +41,7 @@ import           Servant.API
 import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               forgetC, liftC, voidRunContinuationT,
                                               pur, impur, commit, mapC, before, causes,
-                                              kleisli, merge,
+                                              kleisli, merge, kleisliT,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO),
@@ -322,19 +323,21 @@ getAgendaButton day chamber =
         commit . pur $ #vmIsLoading .~ IsLoadingAgenda
         commit . pur $ #vmAgenda .~ Nothing
         commit . merge . impur $ (#vmAgenda .~) . Just <$> getAgenda day chamber
-        commit . pur $
-          \vm ->
-            case vmAgenda vm of
-              Just (AgendaResult (Right (Agenda agenda))) ->
-                (#vmPositions . #unPositions) .~
-                  (Map.fromList . fmap (,Nothing) . Set.toList
-                    <$> agenda)
-                $ vm
-              _ -> vm
+        commit . pur $ emptyOutPositions
         commit . pur $ #vmIsLoading .~ IsNOTLoadingAgenda
     , class' btnCls
     ]
     [ text "Get Agenda" ]
+
+
+emptyOutPositions :: ViewModel -> ViewModel
+emptyOutPositions vm =
+  case vmAgenda vm of
+    Just (AgendaResult (Right (Agenda agenda))) ->
+      (#vmPositions . #unPositions) .~
+        (Map.fromList . fmap (,Nothing) . Set.toList <$> agenda)
+      $ vm
+    _ -> vm
 
 
 agendaView :: Applicative m => ViewModel -> Html m ViewModel
@@ -375,7 +378,7 @@ billView vm agenda cm bill =
 
 
 billPositionView :: Applicative m => ViewModel -> Agenda -> Committee -> Bill -> Position -> Html m ViewModel
-billPositionView _vm _agenda cm bill pos =
+billPositionView vm _agenda cm bill pos =
   span
     [ class' "mr-2" ]
     [ text (pack (show pos))
@@ -383,6 +386,7 @@ billPositionView _vm _agenda cm bill pos =
         [ class' "mx-2"
         , ("type", "radio")
         , name' (unBillId (billId bill))
+        , checked . isJust $ Map.lookup cm (unPositions (vmPositions vm)) >>= join . Map.lookup bill >>= guard . (== pos)
         , onClick $ #vmPositions . #unPositions . at cm . _Just . at bill . _Just .~ Just pos
         ]
         []
@@ -467,7 +471,7 @@ submitButton vm =
     Just (AgendaResult (Right _)) ->
       if null (unPositions (vmPositions vm))
       then disabledButton
-      else if vmStatus vm == HaveNotSubmitted
+      else if vmStatus vm /= SubmissionProcessing
            then enabledButton
            else disabledButton
     _ -> disabledButton
@@ -475,12 +479,10 @@ submitButton vm =
     disabledButton =
       button
         [ disabled True
-        , class' btnCls ]
-        [ text $ case vmStatus vm of
-                   SubmissionProcessing -> "Processing..."
-                   SubmissionSucceeded -> "Success!"
-                   SubmissionFailed err -> "Failure: " <> unErrorMessage err
-                   _ -> "Submit"
+        , class' (btnCls <> " text-gray-500") ]
+        [ if vmStatus vm == SubmissionProcessing
+          then text "Processing..."
+          else text "Submit"
         ]
 
     enabledButton =
@@ -489,6 +491,11 @@ submitButton vm =
         , onClickC . voidRunContinuationT $ do
             commit . pur $ #vmStatus .~ SubmissionProcessing
             commit . merge . impur $ (#vmStatus .~) . toStatus <$> testify submission
+            commit . kleisliT $
+              \vm' ->
+                if vmStatus vm' == SubmissionSucceeded
+                then commit $ pur emptyOutPositions
+                else return ()
         ]
         [ text "Submit" ]
 
@@ -499,6 +506,10 @@ submitButton vm =
 
 
 statusView :: Applicative m => SubmissionStatus -> Html m ()
+statusView SubmissionSucceeded =
+  div [ class' "m-2 font-semibold text-green-600" ] [ text "Your positions have been submitted to the State!" ]
+statusView (SubmissionFailed (ErrorMessage err)) =
+  div [ class' "m-2 font-semibold text-red-600" ] [ text $ "There was an issue processing your request: " <> err ]
 statusView _ = div [] []
 
 
@@ -532,7 +543,7 @@ view model =
         , a [ href "mailto:morgan.thomas@platonic.systems"
             , class' hrefCls ]
             [ "Morgan Thomas <morgan.thomas@platonic.systems>" ]
-        , text "."
+        , text ". Please share the approximate date and time when you encountered an issue and any error message you received."
         ]
     , div
         [ class' "m-2" ]

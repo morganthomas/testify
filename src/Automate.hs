@@ -63,6 +63,7 @@ testifyOnBill cfg day chamber committee bill position person = do
   openPage (unpack (getFormUrl cfg chamber))
   dayEl <- waitForElem (daySelector day)
   click dayEl
+  wait
   committeeSelect <- waitForElem . ByCSS . unCommitteeDropdownSelector $ committeeDropdownSelector cfg
   click committeeSelect
   wait
@@ -71,6 +72,7 @@ testifyOnBill cfg day chamber committee bill position person = do
   wait
   billSelect <- findElem . ByCSS . unBillDropdownSelector $ billDropdownSelector cfg
   click billSelect
+  wait
   billEl <- findElem (billSelector cfg bill)
   click billEl
   wait
@@ -89,7 +91,8 @@ testifyOnBill cfg day chamber committee bill position person = do
   continueDisabled <- attr continueEl "disabled"
   liftIO $ putStrLn (show continueDisabled)
   when (continueDisabled == Just "disabled") (error "continue is disabled")
-  click continueEl
+  continueEl' <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
+  click continueEl'
   firstNameEl <- waitForElem . ByCSS . unFirstNameSelector $ firstNameSelector cfg
   sendKeys (unFirstName (firstName person)) firstNameEl
   lastNameEl <- findElem . ByCSS . unLastNameSelector $ lastNameSelector cfg
@@ -147,6 +150,7 @@ getCommitteeBills cfg committee = do
   click select
   option <- waitForElem $ getCommitteeSelector cfg committee
   click option
+  wait
   _ <- waitForElem . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg) <> " option[selected=\"selected\"]"
   billEls <- findElems . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg)
                               <> " option:not(selected)"
