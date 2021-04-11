@@ -49,6 +49,7 @@ import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.DeveloperTools  (withDeveloperTools)
 import           Shpadoinkle.Html
 import           Shpadoinkle.Html.LocalStorage
+import           Shpadoinkle.Html.Utils      (addStyle)
 import           Shpadoinkle.Lens            (onRecord)
 import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
 import           Shpadoinkle.Run             (live, runJSorWarp)
@@ -223,6 +224,7 @@ selectFrom opts oSelected =
   select
     [ listenRaw "change" $ \(RawNode n) _ ->
         pur . const . read . fromMaybe "" <$> (fromJSVal =<< n ! "value")
+    , class' "mr-1 p-1"
     ]
     ( (\o ->
         option
@@ -264,11 +266,21 @@ dateSelect :: Applicative m => Day -> Html m Day
 dateSelect day =
   let (y, m, d) = toGregorian day in
   div
-    [ class' "date-select" ]
-    [ liftC setYear  getYear  $ yearSelect (Year y)
-    , liftC setMonth getMonth $ monthSelect (numToMonth m)
-    , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
+    [ class' "m-2" ]
+    [ span
+        [ class' "m-1 font-semibold" ]
+        [ text "Select Date" ]
+    , div
+      [ class' "m-1" ]
+      [ liftC setYear  getYear  $ yearSelect (Year y)
+      , liftC setMonth getMonth $ monthSelect (numToMonth m)
+      , liftC setDay   getDay   $ dayOfMonthSelect (DayOfMonth d)
+      ]
     ]
+
+
+btnCls :: Text
+btnCls = "border-solid border-black border-2 rounded p-1 m-2 font-semibold"
 
 
 getAgendaButton :: Monad m => TestifyEffects m => Day -> Html m ViewModel
@@ -288,6 +300,7 @@ getAgendaButton day =
                 $ vm
               _ -> vm
         commit . pur $ #vmIsLoading .~ IsNOTLoadingAgenda
+    , class' btnCls
     ]
     [ text "Get Agenda" ]
 
@@ -351,16 +364,19 @@ emptyPersonalInfo = PersonalInfo "" "" "" ""
 
 editField :: Applicative m => Text -> (a -> Text) -> (Text -> a) -> Lens' PersonalInfo a -> PersonalInfo -> Html m [PersonalInfo]
 editField label toTxt fromTxt lens person =
-  div
-    [ class' "edit-field" ]
-    [ text label
-    , input
+  div []
+  [ span [ class' "w-32 inline-block" ] [ text label ]
+  , span
+      [ class' "w-44 inline-block" ]
+      [ input
         [ ("type", "text")
+        , ("size", "44")
         , value (toTxt $ person ^. lens)
         , onInput (\new -> replace person (lens .~ fromTxt new $ person))
         ]
         []
-    ]
+      ]
+  ]
   where
     replace :: Eq a => a -> a -> [a] -> [a]
     replace x y = fmap (\z -> if z == x then y else z)
@@ -368,15 +384,14 @@ editField label toTxt fromTxt lens person =
 
 editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
 editPerson person =
-  div
-    [ class' "edit-person" ]
+  div [ ]
     $
     [ editField "First Name" unFirstName FirstName #firstName person
     , editField "Last Name" unLastName LastName #lastName person
     , editField "Email" unEmail Email #email person
     , editField "Town" unTown Town #town person
     ]
-    ++
+    <>
     (
       case multiPersonFeature features of
         MultiPersonFeature ->
@@ -402,12 +417,16 @@ personsView persons =
   case multiPersonFeature features of
     MultiPersonFeature ->
       div
-        []
+        [ class' "m-2" ]
         (  ( editPerson <$> persons )
         <> [ addPerson persons ]
         )
     NoMultiPersonFeature ->
-      div [] ( editPerson <$> persons )
+      div
+        [ class' "m-2" ]
+        $
+          span [ class' "font-semibold mb-2" ] [ text "Personal Information" ]
+        : ( editPerson <$> persons )
 
 
 submitButton :: Monad m => TestifyEffects m
@@ -424,7 +443,8 @@ submitButton vm =
   where
     disabledButton =
       button
-        [ disabled True ]
+        [ disabled True
+        , class' btnCls ]
         [ text $ case vmStatus vm of
                    SubmissionProcessing -> "Processing..."
                    SubmissionSucceeded -> "Success!"
@@ -434,7 +454,8 @@ submitButton vm =
 
     enabledButton =
       button
-        [ onClickC . voidRunContinuationT $ do
+        [ class' btnCls
+        , onClickC . voidRunContinuationT $ do
             commit . pur $ #vmStatus .~ SubmissionProcessing
             commit . merge . impur $ (#vmStatus .~) . toStatus <$> testify submission
         ]
@@ -484,6 +505,7 @@ setSavedPersonalInfo = setStorage storageKey
 
 app :: JSM ()
 app = do
+  addStyle "https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.1.0/tailwind.min.css"
   now     <- liftIO getCurrentTime
   tz      <- liftIO getCurrentTimeZone
   persons <- fromMaybe initialPersons <$> getSavedPersonalInfo
