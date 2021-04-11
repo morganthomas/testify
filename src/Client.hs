@@ -266,7 +266,7 @@ dateSelect :: Applicative m => Day -> Html m Day
 dateSelect day =
   let (y, m, d) = toGregorian day in
   div
-    [ class' "m-2" ]
+    [ class' "m-2 mt-5" ]
     [ span
         [ class' "m-1 font-semibold" ]
         [ text "Select Date" ]
@@ -472,9 +472,11 @@ statusView _ = div [] []
 
 view :: Effects m => ViewModel -> Html m ViewModel
 view model =
-  div
-    [class' "app"]
-    [ onRecord #vmDay $ dateSelect (vmDay model)
+  div [ ]
+    [ span
+        [ class' "m-3 p-2 font-bold text-lg border-b-2 border-black" ]
+        [ text "New Hampshire Bill Sign In Tool" ]
+    , onRecord #vmDay $ dateSelect (vmDay model)
     , getAgendaButton (vmDay model)
     , agendaView model
     , onRecord #vmPersons $ personsView (vmPersons model)
