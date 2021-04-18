@@ -1,4 +1,4 @@
-{ chan ? "5272327b81ed355bbed5659b8d303cf2979b6953"
+{ chan ? "e1843646b04fb564abf6330a9432a76df3269d2f"
 , compiler ? "ghc865"
 , withHoogle ? false
 , doHoogle ? false
@@ -15,11 +15,18 @@
 let
 
 
+  recurse-ghcjs = import ./default.nix {
+    inherit chan compiler withHoogle doHoogle doHaddock enableLibraryProfiling enableExecutableProfiling strictDeps asShell system optimize;
+    docker = false;
+    isJS = true;
+  };
+
+
   # It's a shpadoinkle day
   shpadoinkle = builtins.fetchGit {
     url    = https://gitlab.com/fresheyeball/Shpadoinkle.git;
-    rev    = "1f81a7933112a8e054b8701d9c9921c1fc7cb105";
-    ref    = "before";
+    rev    = "b61144563bf2842bb51441e68bbb8471487d49cc";
+    ref    = "master";
   };
 
 
@@ -48,13 +55,23 @@ let
   # Overlay containing Shpadoinkle packages, and needed alterations for those packages
   # as well as optimizations from Reflex Platform
   shpadoinkle-overlay =
-    import (shpadoinkle + "/nix/overlay.nix") { inherit compiler chan isJS; };
+    import (shpadoinkle + "/nix/overlay.nix") { inherit compiler chan isJS enableLibraryProfiling enableExecutableProfiling; };
 
 
   # Haskell specific overlay (for you to extend)
-  haskell-overlay = hself: hsuper: {
-    "happy" = pkgs.haskell.lib.dontCheck hsuper.happy;
-    servant-foreign = pkgs.haskell.lib.dontCheck hsuper.servant-foreign;
+  haskell-overlay = with pkgs.haskell.lib; hself: hsuper: {
+    bsb-http-chunked = dontCheck hsuper.bsb-http-chunked;
+    directory-tree = dontCheck hsuper.directory-tree;
+    happy = dontCheck hsuper.happy;
+    http2 = dontCheck hsuper.http2;
+    http-date = dontCheck hsuper.http-date;
+    iproute = dontCheck hsuper.iproute;
+    network-byte-order = dontCheck hsuper.network-byte-order;
+    servant-foreign = dontCheck hsuper.servant-foreign;
+    streaming-commons = dontCheck hsuper.streaming-commons;
+    unix-time = dontCheck hsuper.unix-time;
+    wai-app-static = dontCheck hsuper.wai-app-static;
+    wai-extra = dontCheck hsuper.wai-extra;
   };
 
 
@@ -108,12 +125,30 @@ in with pkgs; with lib;
     shellHook   = ''
       ${lolcat}/bin/lolcat ${./figlet}
       cat ${./intro}
-      java -jar selenium-server-standalone-2.53.1.jar &
     '';
   }
   else if docker
   then import ./docker-image.nix { inherit pkgs;
                                    selenium-server-standalone-jar = ./selenium-server-standalone-2.53.1.jar;
                                    testify = testify-build;
+                                   testify-js = recurse-ghcjs;
                                    jre = pkgs.jre; }
+  else if isJS
+  then stdenv.mkDerivation {
+         name = "testify-static";
+         src = ./src;
+         buildInputs = [ testify-build ];
+         configurePhase = ''
+           echo configuring
+         '';
+         buildPhase = ''
+           echo building
+           mkdir -p $out
+           cp ./index.html $out
+           cp -r ${testify-build.outPath}/* $out
+         '';
+         installPhase = ''
+           echo installing
+         '';
+       }
   else testify-build
