@@ -24,7 +24,8 @@ import Types.Api
 
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch (MonadThrow, MonadCatch)
-import Control.Monad.IO.Class
+import Control.Monad.Error.Class (MonadError)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
 import Data.Aeson (Value (String))
@@ -37,6 +38,7 @@ import Network.Wai (modifyResponse, mapResponseHeaders)
 import Network.Wai.Application.Static (defaultWebAppSettings)
 import Network.Wai.Middleware.Servant.Options (provideOptions)
 import Servant
+import Servant.Server (ServerError)
 import Servant.Foreign.Internal (GenerateList (..), HasForeign (..), Req)
 import Shpadoinkle.Router (View)
 import Shpadoinkle.Router.Server (serveDirectoryWithSpa)
@@ -93,7 +95,7 @@ appPxy = Proxy
 
 
 newtype AutomateT m a = AutomateT { unAutomateT :: ReaderT Config (ExceptT ServerError m) a }
-  deriving newtype (Functor, Applicative, Monad, MonadIO)
+  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadError ServerError)
 
 instance Monad m => HasConfig (AutomateT m) where
   getConfig = AutomateT $ asks id
@@ -124,9 +126,9 @@ server cfg =
     f m = Handler $ runReaderT (unAutomateT m) cfg
 
 
-server' :: HasConfig m => MonadIO m
+server' :: ( HasConfig m, MonadIO m, MonadError ServerError m )
        => ServerT App m
-server' = (getAgendaHandler :<|> testifyHandler) :<|> spaHandler
+server' = (getAgendaHandler :<|> testifyHandler :<|> rootHandler) :<|> spaHandler
 
 
 getAgendaHandler :: HasConfig m => MonadIO m
@@ -142,6 +144,10 @@ testifyHandler subm = do
   cfg <- getConfig
   liftIO $ TestifyResult (Right Success)
     <$ runSession (sessionConfig cfg) (testifyOnBills cfg subm)
+
+
+rootHandler :: MonadError ServerError m => ServerT RootApi m
+rootHandler = throwError $ err301 { errHeaders = [("Location", "/index.html")] }
 
 
 spaHandler :: MonadIO m => ServerT SPA m

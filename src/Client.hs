@@ -100,7 +100,7 @@ instance ( Monad m, MonadTrans t, TestifyEffects m ) => TestifyEffects (t m) whe
 
 getAgendaM :: Day -> Chamber -> ClientM AgendaResult
 testifyM :: Submission -> ClientM TestifyResult
-getAgendaM :<|> testifyM = client (Proxy @Api)
+getAgendaM :<|> testifyM :<|> _ = client (Proxy @Api)
 
 
 type Effects m =
