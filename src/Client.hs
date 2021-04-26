@@ -359,7 +359,7 @@ committeeView vm agenda cm bills = div [] $
       [ class' "mb-2 font-semibold" ]
       [ text (unCommitteeName (committeeName cm)) ]
   : ( if null bills
-      then [ text "No bills for this committee (is this a software error?)" ]
+      then [ text "No bills for this committee" ]
       else billView vm agenda cm <$> Set.toList bills )
 
 
