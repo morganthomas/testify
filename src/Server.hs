@@ -12,6 +12,7 @@ import Types.Api
 
 import Data.List.Extra (trim)
 import Network.Wai.Handler.Warp (run)
+import System.Envy (runEnv, env)
 import System.Process (readProcess)
 
 
@@ -30,5 +31,6 @@ instance HasConfig IO where
 
 main :: IO ()
 main = do
-  putStrLn "starting server on port 8008"
-  run 8008 =<< app =<< getConfig
+  port <- either (const 8080) id <$> runEnv (env "TESTIFY_PORT")
+  putStrLn $ "starting server on port " <> show port
+  run port =<< app =<< getConfig

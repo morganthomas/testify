@@ -5,7 +5,7 @@ let
     ${jre}/bin/java -jar ${selenium-server-standalone-jar} &
     ln -s ${testify-js.outPath} ./static
     echo "=== starting server ==="
-    ${testify.outPath}/bin/server
+    TESTIFY_PORT=80 ${testify.outPath}/bin/server
     echo "=== finished ==="
   '';
 in
