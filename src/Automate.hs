@@ -108,7 +108,8 @@ testifyOnBill cfg day chamber committee bill position person = do
   click continueEl2
   agreeEl <- waitForElem . ByCSS . unAgreeSelector $ agreeSelector cfg
   click agreeEl
-  continueEl3 <- findElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
+  wait
+  continueEl3 <- waitForElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
   click continueEl3
 
 
