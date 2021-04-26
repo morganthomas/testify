@@ -143,9 +143,11 @@ in with pkgs; with lib;
          '';
          buildPhase = ''
            echo building
-           mkdir -p $out
-           cp ./index.html $out
-           cp -r ${testify-build.outPath}/* $out
+           rev=$((basename $out) | cut -d - -f 1)
+           echo REVISION IS $rev
+           mkdir -p $out/$rev
+           cat ./index.html | sed -e s/bin\\/client.jsexe/$rev\\/bin\\/client.jsexe/ >$out/index.html
+           cp -r ${testify-build.outPath}/* $out/$rev
          '';
          installPhase = ''
            echo installing
