@@ -52,7 +52,7 @@ import           Shpadoinkle.Html
 import           Shpadoinkle.Html.LocalStorage
 import           Shpadoinkle.Html.Utils      (addStyle)
 import           Shpadoinkle.Lens            (onRecord)
-import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
+import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR)
 import           Shpadoinkle.Run             (live, runJSorWarp)
 import           UnliftIO.Concurrent         (forkIO)
 
@@ -83,11 +83,8 @@ instance MonadUnliftIO UIM where
     c <- askJSM
     return $ UnliftIO $ \(UIM m) -> runJSaddle @IO c m
 
-clientEnv :: ClientEnv
-clientEnv = ClientEnv (BaseUrl Http "localhost" 8008 "")
-
 toUIM :: ClientM a -> UIM a
-toUIM = UIM . flip runXHR' clientEnv
+toUIM = UIM . runXHR
 
 instance TestifyEffects UIM where
   getAgenda c d = toUIM $ getAgendaM c d
