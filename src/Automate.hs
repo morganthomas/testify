@@ -14,7 +14,7 @@ import Control.Monad (forM, forM_, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe, maybeToList)
+import Data.Maybe (fromMaybe, maybeToList, isJust)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
 import Test.WebDriver (WD)
@@ -87,10 +87,11 @@ testifyOnBill cfg day chamber committee bill position person = do
              Neutral -> findElem . ByCSS . unNeutralSelector $ neutralSelector cfg
   click posEl
   wait
+  wait
   continueEl <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
   continueDisabled <- attr continueEl "disabled"
   liftIO $ putStrLn (show continueDisabled)
-  when (continueDisabled == Just "disabled") (error "continue is disabled")
+  when (isJust continueDisabled) (error "continue is disabled")
   continueEl' <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
   click continueEl'
   firstNameEl <- waitForElem . ByCSS . unFirstNameSelector $ firstNameSelector cfg
