@@ -46,6 +46,7 @@ import Test.WebDriver (Browser (..), sessions, runWD, useBrowser, createSession,
 import Test.WebDriver.Capabilities (Capabilities (additionalCaps), defaultCaps, phantomjs)
 import Test.WebDriver.Config (WDConfig (wdCapabilities), defaultConfig)
 import Test.WebDriver.Session (WDSession)
+import WaiAppStatic.Types (StaticSettings (..))
 
 
 data Noop a = Noop
@@ -151,4 +152,4 @@ rootHandler = throwError $ err301 { errHeaders = [("Location", "/index.html")] }
 
 
 spaHandler :: MonadIO m => ServerT SPA m
-spaHandler = serveDirectoryWithSpa (defaultWebAppSettings "./static")
+spaHandler = serveDirectoryWithSpa ((defaultWebAppSettings "./static") { ssUseHash = True })
