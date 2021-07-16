@@ -45,6 +45,7 @@ import           Shpadoinkle                 (shpadoinkle, Html, NFData,
                                               JSM, MonadJSM, newTVarIO,
                                               MonadUnliftIO (askUnliftIO),
                                               askJSM, UnliftIO (UnliftIO),
+                                              Continuous (..),
                                               RawNode (..))
 import           Shpadoinkle.Backend.ParDiff (runParDiff)
 import           Shpadoinkle.DeveloperTools  (withDeveloperTools)
@@ -391,7 +392,7 @@ billPositionView vm _agenda cm bill pos =
 
 
 emptyPersonalInfo :: PersonalInfo
-emptyPersonalInfo = PersonalInfo "" "" "" ""
+emptyPersonalInfo = PersonalInfo "" "" "" "" AMemberOfThePublic "Myself"
 
 
 editField :: Applicative m => Text -> (a -> Text) -> (Text -> a) -> Lens' PersonalInfo a -> PersonalInfo -> Html m [PersonalInfo]
@@ -409,16 +410,23 @@ editField label toTxt fromTxt lens person =
         []
       ]
   ]
-  where
-    replace :: Eq a => a -> a -> [a] -> [a]
-    replace x y = fmap (\z -> if z == x then y else z)
+
+
+liftToList :: Eq a => Continuous f => a -> f m a -> f m [a]
+liftToList = error "todo"
+
+
+replace :: Eq a => a -> a -> [a] -> [a]
+replace x y = fmap (\z -> if z == x then y else z)
 
 
 editPerson :: Applicative m => PersonalInfo -> Html m [PersonalInfo]
 editPerson person =
   div [ ]
     $
-    [ editField "First Name" unFirstName FirstName #firstName person
+    [ liftToList person $ onRecord #iAm $ iAmSelect (person ^. #iAm)
+    , editField "I Am Representing" unIBeReppin IBeReppin #iBeReppin person
+    , editField "First Name" unFirstName FirstName #firstName person
     , editField "Last Name" unLastName LastName #lastName person
     , editField "Email" unEmail Email #email person
     , editField "Town" unTown Town #town person
@@ -433,6 +441,39 @@ editPerson person =
           ] 
         NoMultiPersonFeature -> []
     )
+
+
+iAmSelect :: IAm -> Html m IAm
+iAmSelect iAm =
+  div
+    [ class' "m-2" ]
+    [ span
+        [ class' "m-1 font-semibold" ]
+        [ text "I Am" ]
+    , div
+        [ class' "m-1" ]
+        [ iAmOption AnElectedOfficial iAm
+        , iAmOption ALobbyist iAm
+        , iAmOption StateAgencyStaff iAm
+        , iAmOption AMemberOfThePublic iAm
+        ]
+    ]
+
+
+iAmOption :: IAm -> IAm -> Html m IAm
+iAmOption opt chosen =
+  span
+    [ class' "mr-2" ]
+    [ text (pack (show opt))
+    , input
+        [ class' "mx-2"
+        , ("type", "radio")
+        , name' "iam"
+        , checked (opt == chosen)
+        , onClick (const opt)
+        ]
+        []
+    ]
 
 
 addPerson :: Applicative m => [PersonalInfo] -> Html m [PersonalInfo]

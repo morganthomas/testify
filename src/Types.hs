@@ -8,6 +8,7 @@ module Types where
 
 import Data.Aeson (ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Set (Set)
 import Data.String (IsString)
 import Data.Text (Text, pack)
@@ -109,6 +110,9 @@ instance NFData Agenda
 instance ToJSON Agenda
 instance FromJSON Agenda
 
+pruneAgenda :: Agenda -> Agenda
+pruneAgenda = Agenda . Map.filter (not . null) . unAgenda
+
 
 data Position = Support | Oppose | Neutral
   deriving (Eq, Ord, Show, Read, Generic)
@@ -158,12 +162,33 @@ instance ToJSON Town
 instance FromJSON Town
 
 
+data IAm = AnElectedOfficial
+         | ALobbyist
+         | StateAgencyStaff
+         | AMemberOfThePublic
+  deriving (Eq, Ord, Show, Read, Generic, Enum, Bounded)
+
+instance NFData IAm
+instance ToJSON IAm
+instance FromJSON IAm
+
+
+newtype IAmRepresenting = IBeReppin { unIBeReppin :: Text }
+  deriving (Eq, Ord, Show, Read, Generic, IsString)
+
+instance NFData IAmRepresenting
+instance ToJSON IAmRepresenting
+instance FromJSON IAmRepresenting
+
+
 data PersonalInfo
   = PersonalInfo
     { firstName :: FirstName
     , lastName  :: LastName
     , email     :: Email
     , town      :: Town
+    , iAm       :: IAm
+    , iBeReppin :: IAmRepresenting
     }
   deriving (Eq, Show, Read, Generic)
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLabels  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TupleSections     #-}
@@ -10,6 +11,7 @@ module Automate
 
 
 import Control.Concurrent (threadDelay)
+import Control.Lens ((^.))
 import Control.Monad (forM, forM_, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
@@ -78,8 +80,13 @@ testifyOnBill cfg day chamber committee bill position person = do
   wait
   iamSelect <- findElem . ByCSS . unIAmDropdownSelector $ iAmDropdownSelector cfg
   click iamSelect
-  iamEl <- findElem . ByCSS . unIAmOptionSelector $ iAmOptionSelector cfg
+  iamEl <- findElem . ByCSS . unIAmOptionSelector
+    $ Map.findWithDefault (error "failed to lookup IAm option selector")
+      (iAm person) (iAmOptionSelectors cfg)
   click iamEl
+  wait
+  iBeReppinEl <- findElem . ByCSS . unIBeReppinSelector $ iBeReppinSelector cfg
+  sendKeys (unIBeReppin (iBeReppin person)) iBeReppinEl
   wait
   posEl <- case position of
              Support -> findElem . ByCSS . unSupportSelector $ supportSelector cfg
@@ -134,7 +141,7 @@ getBills cfg day chamber = do
   click dayEl
   wait
   committees <- getCommittees cfg
-  Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getCommitteeBills cfg c)
+  pruneAgenda . Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getCommitteeBills cfg c)
 
 
 getCommittees :: MonadIO m => WebDriver m => Config -> m [Committee]

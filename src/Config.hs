@@ -5,6 +5,8 @@
 module Config where
 
 
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.String (IsString)
 import Data.Text (Text)
 
@@ -32,6 +34,10 @@ newtype IAmDropdownSelector = IAmDropdownSelector { unIAmDropdownSelector :: Tex
 
 
 newtype IAmOptionSelector = IAmOptionSelector { unIAmOptionSelector :: Text }
+  deriving (Eq, Read, Show, IsString)
+
+
+newtype IAmRepresentingSelector = IBeReppinSelector { unIBeReppinSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
@@ -108,7 +114,8 @@ data Config
     , committeeDropdownSelector :: CommitteeDropdownSelector
     , billDropdownSelector :: BillDropdownSelector
     , iAmDropdownSelector :: IAmDropdownSelector
-    , iAmOptionSelector :: IAmOptionSelector
+    , iAmOptionSelectors :: Map IAm IAmOptionSelector
+    , iBeReppinSelector :: IAmRepresentingSelector
     , supportSelector :: SupportSelector
     , opposeSelector :: OpposeSelector
     , neutralSelector :: NeutralSelector
@@ -141,7 +148,14 @@ config phantomPath =
   , committeeDropdownSelector = "select[name=\"ddlCommittee\"]"
   , billDropdownSelector = "select[name=\"ddlBills\"]"
   , iAmDropdownSelector = "select[name=\"ddlWho\"]"
-  , iAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
+  , iAmOptionSelectors =
+      Map.fromList
+      [ ( AnElectedOfficial, "select[name=\"ddlWho\"] option[value=\"1\"]" )
+      , ( ALobbyist, "select[name=\"ddlWho\"] option[value=\"2\"]" )
+      , ( StateAgencyStaff, "select[name=\"ddlWho\"] option[value=\"3\"]" )
+      , ( AMemberOfThePublic, "select[name=\"ddlWho\"] option[value=\"4\"]" )
+      ]
+  , iBeReppinSelector = "#txtRepresenting"
   , supportSelector = "#rdoPosition_0"
   , opposeSelector = "#rdoPosition_1"
   , neutralSelector = "#rdoPosition_2"
