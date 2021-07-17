@@ -18,8 +18,8 @@ let
   # It's a shpadoinkle day
   shpadoinkle = builtins.fetchGit {
     url    = https://gitlab.com/fresheyeball/Shpadoinkle.git;
-    rev    = "1f81a7933112a8e054b8701d9c9921c1fc7cb105";
-    ref    = "before";
+    rev    = "b61144563bf2842bb51441e68bbb8471487d49cc";
+    ref    = "master";
   };
 
 
@@ -48,7 +48,7 @@ let
   # Overlay containing Shpadoinkle packages, and needed alterations for those packages
   # as well as optimizations from Reflex Platform
   shpadoinkle-overlay =
-    import (shpadoinkle + "/nix/overlay.nix") { inherit compiler chan isJS; };
+    import (shpadoinkle + "/nix/overlay.nix") { inherit compiler chan isJS enableLibraryProfiling enableExecutableProfiling; };
 
 
   # Haskell specific overlay (for you to extend)
