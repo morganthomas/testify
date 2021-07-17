@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeApplications           #-}
 
 
-module Main where
+module Client where
 
 
 import           Prelude                     hiding (div, span)
@@ -33,8 +33,8 @@ import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
 import           Data.Text                   (Text, pack)
 import           Data.Time.Calendar          (Day, toGregorian, fromGregorian)
-import           Data.Time.Clock             (getCurrentTime, UTCTime (utctDay), addUTCTime, nominalDay)
-import           Data.Time.LocalTime         (utcToLocalTime, getCurrentTimeZone, localDay)
+import           Data.Time.Clock             (UTCTime (utctDay))
+import           Data.Time.LocalTime         (utcToLocalTime, localDay)
 import           GHC.Generics                (Generic)
 import           Language.Javascript.JSaddle (runJSaddle, fromJSVal, (!))
 import           Servant.API
@@ -52,7 +52,7 @@ import           Shpadoinkle.Html
 import           Shpadoinkle.Html.LocalStorage
 import           Shpadoinkle.Html.Utils      (addStyle)
 import           Shpadoinkle.Lens            (onRecord)
-import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR')
+import           Shpadoinkle.Router.Client   (ClientEnv (ClientEnv), BaseUrl (BaseUrl), Scheme (Http), ClientM, client, runXHR)
 import           Shpadoinkle.Run             (live, runJSorWarp)
 import           UnliftIO.Concurrent         (forkIO)
 
@@ -83,11 +83,8 @@ instance MonadUnliftIO UIM where
     c <- askJSM
     return $ UnliftIO $ \(UIM m) -> runJSaddle @IO c m
 
-clientEnv :: ClientEnv
-clientEnv = ClientEnv (BaseUrl Http "localhost" 8008 "")
-
 toUIM :: ClientM a -> UIM a
-toUIM = UIM . flip runXHR' clientEnv
+toUIM = UIM . runXHR
 
 instance TestifyEffects UIM where
   getAgenda c d = toUIM $ getAgendaM c d
@@ -100,7 +97,7 @@ instance ( Monad m, MonadTrans t, TestifyEffects m ) => TestifyEffects (t m) whe
 
 getAgendaM :: Day -> Chamber -> ClientM AgendaResult
 testifyM :: Submission -> ClientM TestifyResult
-getAgendaM :<|> testifyM = client (Proxy @Api)
+getAgendaM :<|> testifyM :<|> _ = client (Proxy @Api)
 
 
 type Effects m =
@@ -362,7 +359,7 @@ committeeView vm agenda cm bills = div [] $
       [ class' "mb-2 font-semibold" ]
       [ text (unCommitteeName (committeeName cm)) ]
   : ( if null bills
-      then [ text "No bills for this committee (is this a software error?)" ]
+      then [ text "No bills for this committee" ]
       else billView vm agenda cm <$> Set.toList bills )
 
 
@@ -524,11 +521,11 @@ view model =
         [ text "This tool allows you to record your positions on bills for the current New Hampshire legislative session." ]
     , div
         [ class' "m-3" ]
-        [ text "It is a more streamlined way of using the "
+        [ text "This is a more streamlined way of using the "
         , a [ class' hrefCls, href (unHouseFormUrl (houseFormUrl cfg)) ] [ text "House sign in form" ]
         , text " and the "
         , a [ class' hrefCls, href (unSenateFormUrl (senateFormUrl cfg)) ] [ text "Senate sign in form" ]
-        , text " provided by the State of New Hampshire."
+        , text " provided by the State of New Hampshire. This project is not affiliated with the State of New Hampshire."
         ]
     , onRecord #vmDay $ dateSelect (vmDay model)
     , onRecord #vmChamber $ chamberSelect (vmChamber model)
@@ -572,26 +569,3 @@ getSavedPersonalInfo = getStorage storageKey
 
 setSavedPersonalInfo :: MonadJSM m => [PersonalInfo] -> m ()
 setSavedPersonalInfo = setStorage storageKey
-
-
-app :: JSM ()
-app = do
-  addStyle "https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.1.0/tailwind.min.css"
-  now     <- liftIO getCurrentTime
-  tz      <- liftIO getCurrentTimeZone
-  persons <- fromMaybe initialPersons <$> getSavedPersonalInfo
-  let tomorrow = localDay (utcToLocalTime tz (addUTCTime nominalDay now))
-      initialModel = initialViewModel tomorrow persons
-  model <- newTVarIO initialModel
-  withDeveloperTools model
-  shpadoinkle runUIM runParDiff model view getBody
-
-
-dev :: IO ()
-dev = live 8080 app
-
-
-main :: IO ()
-main = do
-  putStrLn "\nHappy point of view on https://localhost:8080\n"
-  runJSorWarp 8080 app

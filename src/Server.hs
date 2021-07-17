@@ -4,19 +4,25 @@
 module Main where
 
 
-import Network.Wai.Handler.Warp (run)
-
 import Api
 import Automate
 import Config
 import Types
 import Types.Api
 
+import Data.List.Extra (trim)
+import Network.Wai.Handler.Warp (run)
+import System.Envy (runEnv, env)
 import System.Process (readProcess)
 
 
 getPhantomjsPath :: IO PhantomjsPath
-getPhantomjsPath = PhantomjsPath <$> readProcess "which" ["phantomjs"] ""
+getPhantomjsPath = do
+  linkPath <- readProcess "which" ["phantomjs"] ""
+  linkPath' <- readProcess "readlink" ["-f", linkPath] ""
+  path <- trim <$> readProcess "readlink" ["-f", linkPath'] ""
+  putStrLn $ "phantomjs path: " <> path
+  return $ PhantomjsPath path
 
 
 instance HasConfig IO where
@@ -25,5 +31,6 @@ instance HasConfig IO where
 
 main :: IO ()
 main = do
-  putStrLn "starting server on port 8008"
-  run 8008 =<< app =<< getConfig
+  port <- either (const 8080) id <$> runEnv (env "TESTIFY_PORT")
+  putStrLn $ "starting server on port " <> show port
+  run port =<< app =<< getConfig

@@ -14,7 +14,7 @@ import Control.Monad (forM, forM_, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe, maybeToList)
+import Data.Maybe (fromMaybe, maybeToList, isJust)
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar (Day, toGregorian)
 import Test.WebDriver (WD)
@@ -87,10 +87,11 @@ testifyOnBill cfg day chamber committee bill position person = do
              Neutral -> findElem . ByCSS . unNeutralSelector $ neutralSelector cfg
   click posEl
   wait
+  wait
   continueEl <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
   continueDisabled <- attr continueEl "disabled"
   liftIO $ putStrLn (show continueDisabled)
-  when (continueDisabled == Just "disabled") (error "continue is disabled")
+  when (isJust continueDisabled) (error "continue is disabled")
   continueEl' <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
   click continueEl'
   firstNameEl <- waitForElem . ByCSS . unFirstNameSelector $ firstNameSelector cfg
@@ -108,7 +109,8 @@ testifyOnBill cfg day chamber committee bill position person = do
   click continueEl2
   agreeEl <- waitForElem . ByCSS . unAgreeSelector $ agreeSelector cfg
   click agreeEl
-  continueEl3 <- findElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
+  wait
+  continueEl3 <- waitForElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
   click continueEl3
 
 
@@ -151,7 +153,6 @@ getCommitteeBills cfg committee = do
   option <- waitForElem $ getCommitteeSelector cfg committee
   click option
   wait
-  _ <- waitForElem . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg) <> " option[selected=\"selected\"]"
   billEls <- findElems . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg)
                               <> " option:not(selected)"
   billNames <- fmap BillName <$> forM billEls getText

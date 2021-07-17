@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker run --network=host testify:latest
+docker run -d --network=host testify:latest
