@@ -86,33 +86,35 @@ testifyOnBill cfg day chamber committee bill position person = do
              Oppose -> findElem . ByCSS . unOpposeSelector $ opposeSelector cfg
              Neutral -> findElem . ByCSS . unNeutralSelector $ neutralSelector cfg
   click posEl
+  nextPage
   wait
   wait
-  continueEl <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
-  continueDisabled <- attr continueEl "disabled"
-  liftIO $ putStrLn (show continueDisabled)
-  when (isJust continueDisabled) (error "continue is disabled")
-  continueEl' <- findElem . ByCSS . unContinueSelector $ continueSelector cfg
-  click continueEl'
   firstNameEl <- waitForElem . ByCSS . unFirstNameSelector $ firstNameSelector cfg
   sendKeys (unFirstName (firstName person)) firstNameEl
   lastNameEl <- findElem . ByCSS . unLastNameSelector $ lastNameSelector cfg
   sendKeys (unLastName (lastName person)) lastNameEl
   emailEl <- findElem . ByCSS . unEmailSelector $ emailSelector cfg
   sendKeys (unEmail (email person)) emailEl
+  townEl <- findElem . ByCSS . unTownSelector $ houseTownSelector cfg
+  sendKeys (unTown (town person)) townEl
+  nextPage
   case chamber of
-    Senate -> return ()
-    House -> do
-      townEl <- findElem . ByCSS . unHouseTownSelector $ houseTownSelector cfg
-      sendKeys (unTown (town person)) townEl
-  continueEl2 <- findElem . ByCSS . unContinueSelector2 $ continueSelector2 cfg
-  click continueEl2
-  agreeEl <- waitForElem . ByCSS . unAgreeSelector $ agreeSelector cfg
-  click agreeEl
-  wait
-  continueEl3 <- waitForElem . ByCSS . unContinueSelector3 $ continueSelector3 cfg
-  click continueEl3
-
+    House -> pure ()
+    Senate -> do
+      agreeEl <- findElem . ByCSS . unAgreeSelect $ agreeSelector cfg
+      click agreeEl
+  submitEl <- findElem . ByCSS . unSubmitSelector $ submitSelector cfg
+  click submitEl
+  where
+    -- senate form is multi page; house form is a one pager
+    nextPage =
+      case chamber of
+        Senate -> do
+          wait
+          submitEl <- findElem . ByCSS . unSubmitSelector $ submitSelector cfg
+          click submitEl
+          wait
+        House -> pure ()
 
 wait :: MonadIO m => m ()
 wait = liftIO $ threadDelay 500000
@@ -175,8 +177,7 @@ daySelector :: Day -> Selector
 daySelector day =
   let (_, month, dayOfMonth) = toGregorian day
       monthText = monthToText month
-      leadingZero = if dayOfMonth < 10 then "0" else ""
-  in ByCSS $ "a[title=\"" <> monthText <> " " <> leadingZero <> pack (show dayOfMonth) <> "\"]"
+  in ByCSS $ "a[title=\"" <> monthText <> " " <> pack (show dayOfMonth) <> "\"]"
 
 
 monthToText :: Int -> Text

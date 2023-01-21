@@ -112,15 +112,12 @@ data Config
     , supportSelector :: SupportSelector
     , opposeSelector :: OpposeSelector
     , neutralSelector :: NeutralSelector
-    , continueSelector :: ContinueSelector
     , firstNameSelector :: FirstNameSelector
     , lastNameSelector :: LastNameSelector
     , emailSelector :: EmailSelector
     , houseTownSelector :: HouseTownSelector
-    , continueSelector2 :: ContinueSelector2
-    , agreeSelector :: AgreeSelector
-    , continueSelector3 :: ContinueSelector3
     , selectCommitteeOption :: SelectCommitteeOption
+    , submitSelector :: SubmitSelector
     , selectBillOption :: SelectBillOption
     , senateFormUrl :: SenateFormUrl
     }
@@ -137,23 +134,21 @@ config phantomPath =
   { userAgentString = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36"
   , phantomjsPath = phantomPath
   , houseFormUrl = "http://gencourt.state.nh.us/house/committees/remotetestimony/default.aspx"
-  , committeeSelector = "select[name=\"ddlCommittee\"] option"
-  , committeeDropdownSelector = "select[name=\"ddlCommittee\"]"
-  , billDropdownSelector = "select[name=\"ddlBills\"]"
-  , iAmDropdownSelector = "select[name=\"ddlWho\"]"
-  , iAmOptionSelector = "select[name=\"ddlWho\"] option[value=\"4\"]"
-  , supportSelector = "#rdoPosition_0"
-  , opposeSelector = "#rdoPosition_1"
-  , neutralSelector = "#rdoPosition_2"
-  , continueSelector = "#btnContinue"
-  , firstNameSelector = "#txtFirstName"
-  , lastNameSelector = "#txtLastName"
-  , emailSelector = "#txtEmail"
-  , houseTownSelector = "#txtTown"
-  , continueSelector2 = "#btnContinue"
-  , agreeSelector = "#chkAgree"
-  , continueSelector3 = "#btnContinue"
+  , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
+  , committeeSelector = "select#pageBody_ddlCommittee option"
+  , committeeDropdownSelector = "select#pageBody_ddlCommittee"
+  , billDropdownSelector = "select#pageBody_ddlBills"
+  , iAmDropdownSelector = "select#pageBody_ddlWho"
+  , iAmOptionSelector = "select#pageBody_ddlWho option[value=\"4\"]"
+  , supportSelector = "input#pageBody_rdoPosition_0"
+  , opposeSelector = "input#pageBody_rdoPosition_1"
+  , neutralSelector = "input#pageBody_rdoPosition_2"
+  , firstNameSelector = "input#pageBody_txtFirstName"
+  , lastNameSelector = "input#pageBody_txtLastName"
+  , emailSelector = "input#pageBody_txtEmail"
+  , townSelector = "input#pageBody_txtTown"
   , selectCommitteeOption = "Select a Committee -->"
   , selectBillOption = "Select a Bill -->"
-  , senateFormUrl = "http://gencourt.state.nh.us/remotecommittee/senate.aspx"
+  , submitSelector = "input#pageBody_btnContinue"
+  , agreeSelector = "input#pageBody_chkAgree"
   }
