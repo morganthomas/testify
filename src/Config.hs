@@ -47,7 +47,7 @@ newtype NeutralSelector = NeutralSelector { unNeutralSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype ContinueSelector = ContinueSelector { unContinueSelector :: Text }
+newtype SubmitSelector = SubmitSelector { unSubmitSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
@@ -63,11 +63,7 @@ newtype EmailSelector = EmailSelector { unEmailSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
-newtype HouseTownSelector = HouseTownSelector { unHouseTownSelector :: Text }
-  deriving (Eq, Read, Show, IsString)
-
-
-newtype ContinueSelector2 = ContinueSelector2 { unContinueSelector2 :: Text }
+newtype TownSelector = TownSelector { unTownSelector :: Text }
   deriving (Eq, Read, Show, IsString)
 
 
@@ -115,9 +111,10 @@ data Config
     , firstNameSelector :: FirstNameSelector
     , lastNameSelector :: LastNameSelector
     , emailSelector :: EmailSelector
-    , houseTownSelector :: HouseTownSelector
+    , townSelector :: TownSelector
     , selectCommitteeOption :: SelectCommitteeOption
     , submitSelector :: SubmitSelector
+    , agreeSelector :: AgreeSelector
     , selectBillOption :: SelectBillOption
     , senateFormUrl :: SenateFormUrl
     }

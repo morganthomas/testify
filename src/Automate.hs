@@ -95,13 +95,13 @@ testifyOnBill cfg day chamber committee bill position person = do
   sendKeys (unLastName (lastName person)) lastNameEl
   emailEl <- findElem . ByCSS . unEmailSelector $ emailSelector cfg
   sendKeys (unEmail (email person)) emailEl
-  townEl <- findElem . ByCSS . unTownSelector $ houseTownSelector cfg
+  townEl <- findElem . ByCSS . unTownSelector $ townSelector cfg
   sendKeys (unTown (town person)) townEl
   nextPage
   case chamber of
     House -> pure ()
     Senate -> do
-      agreeEl <- findElem . ByCSS . unAgreeSelect $ agreeSelector cfg
+      agreeEl <- findElem . ByCSS . unAgreeSelector $ agreeSelector cfg
       click agreeEl
   submitEl <- findElem . ByCSS . unSubmitSelector $ submitSelector cfg
   click submitEl
