@@ -1,7 +1,5 @@
 # testify
 
-My best friend!
-
 ## Build testify
 
 ```bash
@@ -18,4 +16,11 @@ stack build
 
 ```bash
 nix-shell --command "ghcid --command 'cabal repl' -W -T Main.dev"
+```
+
+## Build and run in Docker
+
+```bash
+./docker-load.sh
+./docker-run.sh
 ```
