@@ -135,6 +135,9 @@ getBills cfg day chamber = do
   dayEl <- waitForElem (daySelector day)
   click dayEl
   wait
+  wait
+  wait
+  wait
   committees <- getCommittees cfg
   Agenda . Map.fromList <$> forM committees (\c -> (c,) . Set.fromList <$> getCommitteeBills cfg c)
 
@@ -154,6 +157,9 @@ getCommitteeBills cfg committee = do
   click select
   option <- waitForElem $ getCommitteeSelector cfg committee
   click option
+  wait
+  wait
+  wait
   wait
   billEls <- findElems . ByCSS $ unBillDropdownSelector (billDropdownSelector cfg)
                               <> " option:not(selected)"
