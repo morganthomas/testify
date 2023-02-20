@@ -4,12 +4,16 @@
 
 ```bash
 nix-build
+./build-static.sh
 ```
 
-or
+## Run testify
+
+## Build and run the Docker image
 
 ```bash
-stack build
+./docker-load.sh
+./docker-run.sh
 ```
 
 ## Develop with live reloading
